@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google" content="notranslate" />
     <meta name="theme-color" id="theme-color-meta" content="#1c1c1c" />
-    <title>AS Study Dashboard v9.4</title>
+    <title>AS Study Dashboard v9.6</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -92,24 +92,25 @@
     </header>
 
     <main id="app-container" class="container max-w-screen-xl mx-auto py-4 px-4">
-        <div class="main-grid grid grid-cols-3 gap-5">
+        <div id="main-content-grid" class="main-grid grid grid-cols-3 gap-5" style="display: none;"> 
             <div class="left-column col-span-2 flex flex-col gap-5">
-                <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">বিষয় নির্বাচন <span id="subject-choice-info-btn"></span></h2><div id="subject-selector" class="flex justify-around"></div></div>
-                <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">নির্বাচিত বিষয়ের অগ্রগতি <span id="main-progress-info-btn"></span></h2><div id="selected-subject-main-progress" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4"></div></div>
-                <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">পরীক্ষার অগ্রগতি <span id="exam-progress-info-btn"></span></h2><div id="selected-subject-exam-progress"></div></div>
-                <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">প্রশ্নব্যাংক অগ্রগতি <span id="qb-progress-info-btn"></span></h2><div id="selected-subject-qb-progress" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4"></div></div>
-                <section id="syllabus-shell" class="card"><h2 class="text-base font-bold mb-3">সিলেবাস বিস্তারিত</h2><div id="syllabus-content"></div></section>
+                <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">বিষয় নির্বাচন <span id="subject-choice-info-btn"></span></h2><div id="subject-selector" class="flex justify-around">Loading...</div></div>
+                <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">নির্বাচিত বিষয়ের অগ্রগতি <span id="main-progress-info-btn"></span></h2><div id="selected-subject-main-progress" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">Loading...</div></div>
+                <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">পরীক্ষার অগ্রগতি <span id="exam-progress-info-btn"></span></h2><div id="selected-subject-exam-progress">Loading...</div></div>
+                <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">প্রশ্নব্যাংক অগ্রগতি <span id="qb-progress-info-btn"></span></h2><div id="selected-subject-qb-progress" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">Loading...</div></div>
+                <section id="syllabus-shell" class="card"><h2 class="text-base font-bold mb-3">সিলেবাস বিস্তারিত</h2><div id="syllabus-content">Loading...</div></section>
             </div>
 
             <div class="right-column col-span-1 grid grid-rows-[auto,min-content,1fr] gap-5">
-                <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">সামগ্রিক মূল্যায়ন <span id="composite-info-btn"></span></h2><div id="syllabus-total-container"></div></div>
-                <div id="countdown-card" class="card text-white p-5"><h2 class="text-lg font-bold mb-4 text-center">Final Countdown</h2><div id="countdown" class="flex justify-around"></div></div>
+                <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">সামগ্রিক মূল্যায়ন <span id="composite-info-btn"></span></h2><div id="syllabus-total-container">Loading...</div></div>
+                <div id="countdown-card" class="card text-white p-5"><h2 class="text-lg font-bold mb-4 text-center">Final Countdown</h2><div id="countdown" class="flex justify-around">Loading...</div></div>
                 <div class="flex flex-col gap-5">
-                    <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">Global Summary <span id="global-summary-info-btn"></span></h2><div id="global-summary-container" class="flex flex-col gap-3"></div></div>
-                    <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">Mini Analytics <span id="analytics-info-btn"></span></h2><div id="analytics-content"></div></div>
+                    <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">Global Summary <span id="global-summary-info-btn"></span></h2><div id="global-summary-container" class="flex flex-col gap-3">Loading...</div></div>
+                    <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">Mini Analytics <span id="analytics-info-btn"></span></h2><div id="analytics-content">Loading...</div></div>
                 </div>
             </div>
         </div>
+         <div id="loading-indicator" class="text-center py-10">Initializing Dashboard...</div>
     </main>
     
     <div id="info-modal-overlay" role="dialog" aria-modal="true"><div id="info-modal-content"><h3 id="info-modal-title" class="font-bold text-lg mb-2"></h3><p id="info-modal-desc" class="text-muted mb-3 text-sm"></p><div class="mb-2 font-semibold text-sm">গণনাকৃত আইটেম:</div><ul id="info-modal-items" class="text-sm"></ul><button id="info-modal-close" class="mt-4 px-4 py-2 bg-rose-600 text-white rounded-lg w-full">Close</button></div></div>
@@ -120,10 +121,12 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, doc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         
+        // --- Firebase Config ---
         const firebaseConfig = {"apiKey":"AIzaSyDTLhIkrW9qk6KPT_gTDibIiJeVwWYTowk","authDomain":"my-study-dashboard.firebaseapp.com","projectId":"my-study-dashboard","storageBucket":"my-study-dashboard.appspot.com","messagingSenderId":"66307909031","appId":"1:66307909031:web:9e724a43c8c11a0ef80282"};
         let app, db, userDocRef;
         try { app = initializeApp(firebaseConfig); db = getFirestore(app); userDocRef = doc(db, "users", "as19", "progress", "main"); } catch (e) { console.error("Firebase initialization failed:", e); }
 
+        // --- IndexedDB Setup ---
         const DB_NAME = 'AdnanStudyDashboardDB_v1'; const DB_VERSION = 1; let idb;
         function openDB() { return new Promise((resolve, reject) => { try { const request = indexedDB.open(DB_NAME, DB_VERSION); request.onerror = (e) => reject("Error opening DB: " + e.target.errorCode); request.onsuccess = (e) => { idb = e.target.result; resolve(idb); }; request.onupgradeneeded = (e) => { const db = e.target.result; if (!db.objectStoreNames.contains('userData')) db.createObjectStore('userData', { keyPath: 'id' }); if (!db.objectStoreNames.contains('pendingWrites')) db.createObjectStore('pendingWrites', { keyPath: 'key' }); }; } catch(e) { reject(e); } }); }
         async function getFromDB(storeName, key) { if (!idb) return null; return new Promise((resolve) => { try { const tx = idb.transaction(storeName, 'readonly'); const store = tx.objectStore(storeName); const req = store.get(key); req.onsuccess = () => resolve(req.result); tx.onerror = () => resolve(null); } catch (e) { resolve(null); } }); }
@@ -131,11 +134,13 @@
         async function writeToDB(storeName, data) { if (!idb) return; return new Promise((resolve, reject) => { try { const tx = idb.transaction(storeName, 'readwrite'); tx.oncomplete = () => resolve(); tx.onerror = (e) => reject(tx.error); const store = tx.objectStore(storeName); store.put(data); } catch (e) { reject(e); } }); }
         async function clearDBStore(storeName) { if (!idb) return; return new Promise((resolve, reject) => { try { const tx = idb.transaction(storeName, 'readwrite'); tx.oncomplete = () => resolve(); tx.onerror = (e) => reject(tx.error); const store = tx.objectStore(storeName); store.clear(); } catch(e) { reject(e); } }); }
 
-        const state = { userData: {}, activeSubject: 'biology', syllabusOpenState: {} };
+        // --- App State & Data ---
+        const state = { userData: {}, activeSubject: 'biology', syllabusOpenState: {}, isInitialized: false }; // Added isInitialized flag
         const syllabusData = { biology: { name: "জীববিজ্ঞান", chapters: [ { id: 1, name: "কোষ ও এর গঠন", paper: 1 }, { id: 2, name: "কোষ বিভাজন", paper: 1 }, { id: 3, name: "কোষ রসায়ন", paper: 1 }, { id: 4, name: "অণুজীব", paper: 1 }, { id: 5, name: "শৈবাল ও ছত্রাক", paper: 1 }, { id: 6, name: "ব্রায়োফাইটা ও টেরিডোফাইটা", paper: 1 }, { id: 7, name: "নগ্নবীজি ও আবৃতবীজি উদ্ভিদ", paper: 1 }, { id: 8, name: "টিস্যু ও টিস্যুতন্ত্র", paper: 1 }, { id: 9, name: "উদ্ভিদ শরীরতত্ত্ব", paper: 1 }, { id: 10, name: "উদ্ভিদ প্রজনন", paper: 1 }, { id: 11, name: "জীব প্রযুক্তি", paper: 1 }, { id: 12, name: "জীবের পরিবেশ, বিস্তার ও সংরক্ষণ", paper: 1 }, { id: 13, name: "প্রাণির বৈচিত্র্য ও শ্রেণিবিন্যাস", paper: 2 }, { id: 14, name: "প্রাণির পরিচিতি (হাইড্রা)", paper: 2 }, { id: 15, name: "প্রাণির পরিচিতি (ঘাসফড়িং)", paper: 2 }, { id: 16, name: "প্রাণির পরিচিতি (রুই মাছ)", paper: 2 }, { id: 17, name: "মানব শরীরতত্ত্ব: পরিপাক ও শোষণ", paper: 2 }, { id: 18, name: "মানব শরীরতত্ত্ব: রক্ত ও সঞ্চালন", paper: 2 }, { id: 19, name: "মানব শরীরতত্ত্ব: শ্বাসক্রিয়া ও শ্বসন", paper: 2 }, { id: 20, name: "মানব শরীরতত্ত্ব: বর্জ্য ও নিষ্কাশন", paper: 2 }, { id: 21, name: "মানব শরীরতত্ত্ব: চলন ও অঙ্গচালনা", paper: 2 }, { id: 22, name: "মানব শরীরতত্ত্ব: সমন্বয় ও নিয়ন্ত্রণ", paper: 2 }, { id: 23, name: "মানব জীবনের ধারাবাহিকতা", paper: 2 }, { id: 24, name: "মানবদেহের প্রতিরক্ষা", paper: 2 }, { id: 25, name: "জিনতত্ত্ব ও বিবর্তন", paper: 2 }, { id: 26, name: "প্রাণির আচরণ", paper: 2 } ] }, chemistry: { name: "রসায়ন", chapters: [ { id: 1, name: "ল্যাবরেটরির নিরাপদ ব্যবহার", paper: 1 }, { id: 2, name: "গুণগত রসায়ন", paper: 1 }, { id: 3, name: "মৌলের পর্যায়বৃত্ত ধর্ম ও রাসায়নিক বন্ধন", paper: 1 }, { id: 4, name: "রাসায়নিক পরিবর্তন", paper: 1 }, { id: 5, name: "কর্মমূখী রসায়ন", paper: 1 }, { id: 6, name: "পরিবেশ রসায়ন", paper: 2 }, { id: 7, name: "জৈব রসায়ন", paper: 2 }, { id: 8, name: "পরিমাণগত রসায়ন", paper: 2 }, { id: 9, name: "তড়িৎ রসায়ন", paper: 2 }, { id: 10, name: "অর্থনৈতিক রসায়ন", paper: 2 } ] }, physics: { name: "পদার্থবিজ্ঞান", chapters: [ { id: 1, name: "ভৌত জগত ও পরিমাপ", paper: 1 }, { id: 2, name: "ভেক্টর", paper: 1 }, { id: 3, name: "গতিবিদ্যা", paper: 1 }, { id: 4, name: "নিউটনিয়ান বলবিদ্যা", paper: 1 }, { id: 5, name: "কাজ, শক্তি ও ক্ষমতা", paper: 1 }, { id: 6, name: "মহাকর্ষ ও অভিকর্ষ", paper: 1 }, { id: 7, name: "পদার্থের গাঠনিক ধর্ম", paper: 1 }, { id: 8, name: "পর্যাবৃত্তিক গতি", paper: 1 }, { id: 9, name: "তরঙ্গ", paper: 1 }, { id: 10, name: "আদর্শ গ্যাস ও গ্যাসের গতিতত্ত্ব", paper: 1 }, { id: 11, name: "তাপগতিবিদ্যা", paper: 2 }, { id: 12, name: "স্থির তড়িৎ", paper: 2 }, { id: 13, name: "চল তড়িৎ", paper: 2 }, { id: 14, name: "তড়িৎ প্রবাহের চৌম্বক ক্রিয়া ও চুম্বকত্ব", paper: 2 }, { id: 15, name: "তড়িৎ চৌম্বক আবেশ ও পরিবর্তী প্রবাহ", paper: 2 }, { id: 16, name: "জ্যামিতিক আলোকবিজ্ঞান", paper: 2 }, { id: 17, name: "ভৌত আলোকবিজ্ঞা", paper: 2 }, { id: 18, name: "আধুনিক পদার্থবিজ্ঞানের সূচনা", paper: 2 }, { id: 19, name: "পরমাণুর মডেল এবং নিউক্লিয়ার পদার্থবিজ্ঞান", paper: 2 }, { id: 20, name: "সেমিকন্ডাক্টর ও ইলেকট্রনিকস", paper: 2 }, { id: 21, name: "জ্যোতির্বিজ্ঞান", paper: 2 } ] } };
         const trackableItems = ["মূল বই", "Class", "Rev Class", "Meditrics", "MQB (Unmesh)", "Retina QB", "Secret Files Exam", "Daily Exam", "Weekly Exam", "Campus Exam", "রিভিশন ১", "রিভিশন ২"];
         const mainStudyItems = ["মূল বই", "Class", "Meditrics"]; const revisionItems = ["রিভিশন ১", "রিভিশন ২", "Rev Class"]; const examItems = ["Secret Files Exam", "Daily Exam", "Weekly Exam", "Campus Exam"]; const qbItems = ["MQB (Unmesh)", "Retina QB"];
 
+        // --- Calculation Logic ---
         const getRawPercentForStatus = (status) => (typeof status === 'number' && status >= 0 && status <= 4) ? status * 20 : 0;
         const normalizeRawTo100 = (raw) => raw <= 0 ? 0 : Math.min(100, (raw / 80) * 100);
         function calculateProgress(subjectKey, itemsToCount) { let currentItems = [...itemsToCount]; if (subjectKey === 'physics') currentItems = currentItems.filter(item => item !== 'মূল বই'); const subjectData = syllabusData[subjectKey]; if (!subjectData || !subjectData.chapters) return { overall: 0, paper1: 0, paper2: 0 }; const mulBoiIndex = trackableItems.indexOf("মূল বই"); const meditricsIndex = trackableItems.indexOf("Meditrics"); const useMaxLogic = currentItems.includes("মূল বই") && currentItems.includes("Meditrics"); let itemIndices = currentItems.map(item => trackableItems.indexOf(item)).filter(i => i >= 0); let p1Sum = 0, p1Count = 0, p2Sum = 0, p2Count = 0; subjectData.chapters.forEach(ch => { let rawSum = 0; let itemsForAvg = itemIndices.length; if (useMaxLogic) { const nonSpecial = itemIndices.filter(i => i !== mulBoiIndex && i !== meditricsIndex); nonSpecial.forEach(i => { rawSum += getRawPercentForStatus(state.userData?.[`s_${subjectKey}_${ch.id}_${i}`] ?? 0); }); const mulBoiStatus = getRawPercentForStatus(state.userData?.[`s_${subjectKey}_${ch.id}_${mulBoiIndex}`] ?? 0); const medStatus = getRawPercentForStatus(state.userData?.[`s_${subjectKey}_${ch.id}_${meditricsIndex}`] ?? 0); rawSum += Math.max(mulBoiStatus, medStatus); itemsForAvg = nonSpecial.length + 1; } else { itemIndices.forEach(i => { rawSum += getRawPercentForStatus(state.userData?.[`s_${subjectKey}_${ch.id}_${i}`] ?? 0); }); } const normalized = normalizeRawTo100(itemsForAvg > 0 ? rawSum / itemsForAvg : 0); if (ch.paper === 1) { p1Sum += normalized; p1Count++; } else { p2Sum += normalized; p2Count++; } }); const paper1 = p1Count > 0 ? p1Sum / p1Count : 0; const paper2 = p2Count > 0 ? p2Sum / p2Count : 0; const overall = (p1Count + p2Count > 0) ? (p1Sum + p2Sum) / (p1Count + p2Count) : 0; return { overall, paper1, paper2 }; }
@@ -143,61 +148,14 @@
         const calculateGlobalAverage = (fn) => { const subjects = Object.keys(syllabusData); let total = 0; subjects.forEach(key => { total += fn(key).overall; }); return { overall: total / (subjects.length || 1) }; };
         const findWeakestSubject = () => { const subjects = Object.keys(syllabusData); if (!subjects.length) return null; let weakest = { name: '', score: 101 }; subjects.forEach(key => { const progress = calculateProgress(key, [...mainStudyItems, ...revisionItems, ...examItems, ...qbItems]); if (progress.overall < weakest.score) { weakest = { name: syllabusData[key].name, score: progress.overall }; } }); return weakest; };
         
+        // --- UI Rendering Functions ---
         const createInfoButton = (data) => { const btn = document.createElement('button'); btn.className = 'info-btn'; btn.textContent = '?'; Object.entries(data).forEach(([k, v]) => { btn.dataset[k] = Array.isArray(v) ? JSON.stringify(v) : v; }); return btn; };
         const createProgressBar = (p, color) => `<div class="w-full progress-bar-container"><div class="progress-bar pb-gradient-${color} h-2" style="width: ${p.toFixed(1)}%"></div></div>`;
         const createBreakdownProgressBar = (data, title, colors=['sky','peach','lav']) => `<div class="flex flex-col gap-2"> <div class="font-bold text-sm">${title}</div> <div class="grid grid-cols-[40px,1fr,45px] items-center gap-2 text-xs"> <span>১ম পত্র</span>${createProgressBar(data.paper1, colors[0])}<span class="text-right font-medium">${data.paper1.toFixed(1)}%</span> <span>২য় পত্র</span>${createProgressBar(data.paper2, colors[1])}<span class="text-right font-medium">${data.paper2.toFixed(1)}%</span> <span class="font-bold">মোট</span>${createProgressBar(data.overall, colors[2])}<span class="text-right font-bold">${data.overall.toFixed(1)}%</span> </div></div>`;
         const createCircularProgressBar = (p, color) => `<svg class="subject-progress-svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" stroke="var(--progress-track)" stroke-width="5" fill="none" /><circle cx="32" cy="32" r="28" stroke="${color}" stroke-width="5" fill="none" stroke-dasharray="${2 * Math.PI * 28}" stroke-dashoffset="${(1 - (p/100)) * 2 * Math.PI * 28}" stroke-linecap="round" /></svg>`;
-        function renderSubjectSelector() { const container = document.getElementById('subject-selector'); if(!container) return; const fragment = document.createDocumentFragment(); const colors = ['#34d399', '#f97316', '#38bdf8']; Object.keys(syllabusData).forEach((key, idx) => { const btn = document.createElement('div'); const isActive = state.activeSubject === key; const progress = calculateProgress(key, mainStudyItems); btn.className = `subject-progress-btn ${isActive ? 'active' : ''}`; btn.dataset.subject = key; btn.innerHTML = `<div class="relative">${createCircularProgressBar(progress.overall, colors[idx % colors.length])}<div class="absolute inset-0 flex items-center justify-center font-bold text-primary">${progress.overall.toFixed(0)}%</div></div><span class="font-semibold text-sm">${syllabusData[key].name}</span>`; btn.onclick = () => { state.activeSubject = key; renderAll(); }; fragment.appendChild(btn); }); container.innerHTML = ''; container.appendChild(fragment); }
-        function renderProgressCards() { const subject = state.activeSubject;
-            document.getElementById('selected-subject-main-progress').innerHTML = createBreakdownProgressBar(calculateProgress(subject, mainStudyItems), 'মূল বই ও লেকচার') + createBreakdownProgressBar(calculateProgress(subject, revisionItems), 'রিভিশন', ['rose', 'amber', 'lav']);
-            document.getElementById('selected-subject-exam-progress').innerHTML = createBreakdownProgressBar(calculateProgress(subject, examItems), 'সকল পরীক্ষা', ['peach', 'cyan', 'mint']);
-            document.getElementById('selected-subject-qb-progress').innerHTML = createBreakdownProgressBar(calculateProgress(subject, ["MQB (Unmesh)"]), 'MQB (Unmesh)', ['amber', 'amber', 'amber']) + createBreakdownProgressBar(calculateProgress(subject, ["Retina QB"]), 'Retina QB', ['cyan', 'cyan', 'cyan']);
-            const composite = calculateComposite(); document.getElementById('syllabus-total-container').innerHTML = createBreakdownProgressBar({ overall: composite.composite, paper1: 0, paper2: 0 }, 'Total Composite Score', ['lav', 'lav', 'lav']).replace(/১ম পত্র.*?<\/div>/, '').replace(/২য় পত্র.*?<\/div>/, '');
-            const globalSummary = document.getElementById('global-summary-container'); globalSummary.innerHTML = `<div class="text-xs flex justify-between items-center"><span>Main Study</span> <strong class="font-bold">${composite.mainAvg.toFixed(1)}%</strong></div>${createProgressBar(composite.mainAvg, "mint")} <div class="text-xs flex justify-between items-center mt-2"><span>Revision</span> <strong class="font-bold">${composite.revAvg.toFixed(1)}%</strong></div>${createProgressBar(composite.revAvg, "sky")} <div class="text-xs flex justify-between items-center mt-2"><span>Exams</span> <strong class="font-bold">${composite.examAvg.toFixed(1)}%</strong></div>${createProgressBar(composite.examAvg, "peach")} <div class="text-xs flex justify-between items-center mt-2"><span>Question Banks</span> <strong class="font-bold">${composite.qbAvg.toFixed(1)}%</strong></div>${createProgressBar(composite.qbAvg, "amber")}`;
-        }
-        function renderSyllabusContent() { 
-            const container = document.getElementById('syllabus-content'); if(!container) return; 
-            const fragment = document.createDocumentFragment(); 
-            const subjectKey = state.activeSubject; 
-            const chaptersByPaper = syllabusData[subjectKey]?.chapters?.reduce((acc, chap) => { (acc[chap.paper] = acc[chap.paper] || []).push(chap); return acc; }, {}); 
-            if(!chaptersByPaper) { container.innerHTML = 'No chapters found.'; return; } 
-            
-            const noteIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /></svg>`;
-            const tickIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="black" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>`;
-
-            Object.entries(chaptersByPaper).forEach(([paper, chapters]) => { 
-                const details = document.createElement('details'); 
-                details.open = state.syllabusOpenState[`${subjectKey}-${paper}`] !== false; 
-                const paperProgress = calculateProgress(subjectKey, mainStudyItems); 
-                const currentPaperProgress = (paper == 1) ? paperProgress.paper1 : paperProgress.paper2; 
-                details.innerHTML = `<summary class="flex justify-between items-center p-3 border border-secondary rounded-lg mb-2 cursor-pointer transition-all hover:bg-main"><div class="font-bold flex items-center">${paper}ম পত্র <span class="text-sm font-normal text-muted ml-2">(${currentPaperProgress.toFixed(1)}%)</span> <span class="ml-2" data-info-btn-id="paper-${paper}-info-btn"></span></div><div class="w-1/3">${createProgressBar(currentPaperProgress, paper == 1 ? 'sky' : 'peach')}</div></summary>`; 
-                const tableWrapper = document.createElement('div'); tableWrapper.className = 'overflow-x-auto'; 
-                const table = document.createElement('table'); table.innerHTML = `<thead><tr><th class="w-1/4">অধ্যায়</th>${trackableItems.map(h => `<th class="text-center">${h}</th>`).join('')}</tr></thead>`; 
-                const tbody = document.createElement('tbody'); 
-                chapters.forEach(chapter => { 
-                    const tr = document.createElement('tr'); 
-                    let cells = `<td class="font-medium">${chapter.name}</td>`; 
-                    trackableItems.forEach((item, i) => { 
-                        const key = `s_${subjectKey}_${chapter.id}_${i}`; 
-                        const status = Number(state.userData?.[key] ?? 0); 
-                        const noteKey = `note_${key}`; 
-                        const hasNote = !!state.userData?.[noteKey]; 
-                        const fillNormalized = normalizeRawTo100(getRawPercentForStatus(status)); 
-                        const isWon = Number(status) === 5; const isDone = Number(status) === 4;
-                        cells += `<td class="text-center"><button class="task-status-btn ${isWon ? 'wont' : ''}" data-key="${key}" style="--fill:${fillNormalized}%"><span class="relative z-10 text-white font-bold text-xs">${isWon ? '✖' : isDone ? tickIconSVG : ''}</span></button><button class="note-btn ${hasNote ? 'has-note' : ''} ml-2" data-key="${noteKey}" data-title="${chapter.name} - ${item}">${noteIconSVG}</button></td>`; 
-                    }); 
-                    tr.innerHTML = cells; 
-                    tbody.appendChild(tr); 
-                }); 
-                table.appendChild(tbody); 
-                tableWrapper.appendChild(table); 
-                details.appendChild(tableWrapper); 
-                fragment.appendChild(details); 
-            }); 
-            container.innerHTML = ''; 
-            container.appendChild(fragment); 
-            setupInfoButtons(); 
-        }
+        function renderSubjectSelector() { const container = document.getElementById('subject-selector'); if(!container) return; const fragment = document.createDocumentFragment(); const colors = ['#34d399', '#f97316', '#38bdf8']; Object.keys(syllabusData).forEach((key, idx) => { const btn = document.createElement('div'); const isActive = state.activeSubject === key; const progress = calculateProgress(key, mainStudyItems); btn.className = `subject-progress-btn ${isActive ? 'active' : ''}`; btn.dataset.subject = key; btn.innerHTML = `<div class="relative">${createCircularProgressBar(progress.overall, colors[idx % colors.length])}<div class="absolute inset-0 flex items-center justify-center font-bold text-primary">${progress.overall.toFixed(0)}%</div></div><span class="font-semibold text-sm">${syllabusData[key].name}</span>`; btn.onclick = () => { if (state.activeSubject !== key) { state.activeSubject = key; renderAll(); }}; fragment.appendChild(btn); }); container.innerHTML = ''; container.appendChild(fragment); }
+        function renderProgressCards() { const subject = state.activeSubject; const mainProgEl = document.getElementById('selected-subject-main-progress'); if(mainProgEl) mainProgEl.innerHTML = createBreakdownProgressBar(calculateProgress(subject, mainStudyItems), 'মূল বই ও লেকচার') + createBreakdownProgressBar(calculateProgress(subject, revisionItems), 'রিভিশন', ['rose', 'amber', 'lav']); const examProgEl = document.getElementById('selected-subject-exam-progress'); if(examProgEl) examProgEl.innerHTML = createBreakdownProgressBar(calculateProgress(subject, examItems), 'সকল পরীক্ষা', ['peach', 'cyan', 'mint']); const qbProgEl = document.getElementById('selected-subject-qb-progress'); if(qbProgEl) qbProgEl.innerHTML = createBreakdownProgressBar(calculateProgress(subject, ["MQB (Unmesh)"]), 'MQB (Unmesh)', ['amber', 'amber', 'amber']) + createBreakdownProgressBar(calculateProgress(subject, ["Retina QB"]), 'Retina QB', ['cyan', 'cyan', 'cyan']); const composite = calculateComposite(); const totalEl = document.getElementById('syllabus-total-container'); if(totalEl) totalEl.innerHTML = createBreakdownProgressBar({ overall: composite.composite, paper1: 0, paper2: 0 }, 'Total Composite Score', ['lav', 'lav', 'lav']).replace(/১ম পত্র.*?<\/div>/, '').replace(/২য় পত্র.*?<\/div>/, ''); const globalSummary = document.getElementById('global-summary-container'); if(globalSummary) globalSummary.innerHTML = `<div class="text-xs flex justify-between items-center"><span>Main Study</span> <strong class="font-bold">${composite.mainAvg.toFixed(1)}%</strong></div>${createProgressBar(composite.mainAvg, "mint")} <div class="text-xs flex justify-between items-center mt-2"><span>Revision</span> <strong class="font-bold">${composite.revAvg.toFixed(1)}%</strong></div>${createProgressBar(composite.revAvg, "sky")} <div class="text-xs flex justify-between items-center mt-2"><span>Exams</span> <strong class="font-bold">${composite.examAvg.toFixed(1)}%</strong></div>${createProgressBar(composite.examAvg, "peach")} <div class="text-xs flex justify-between items-center mt-2"><span>Question Banks</span> <strong class="font-bold">${composite.qbAvg.toFixed(1)}%</strong></div>${createProgressBar(composite.qbAvg, "amber")}`; }
+        function renderSyllabusContent() { const container = document.getElementById('syllabus-content'); if(!container) return; const fragment = document.createDocumentFragment(); const subjectKey = state.activeSubject; const chaptersByPaper = syllabusData[subjectKey]?.chapters?.reduce((acc, chap) => { (acc[chap.paper] = acc[chap.paper] || []).push(chap); return acc; }, {}); if(!chaptersByPaper) { container.innerHTML = 'No chapters found.'; return; } const noteIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /></svg>`; const tickIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="black" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>`; Object.entries(chaptersByPaper).forEach(([paper, chapters]) => { const details = document.createElement('details'); details.open = state.syllabusOpenState[`${subjectKey}-${paper}`] !== false; const paperProgress = calculateProgress(subjectKey, mainStudyItems); const currentPaperProgress = (paper == 1) ? paperProgress.paper1 : paperProgress.paper2; details.innerHTML = `<summary class="flex justify-between items-center p-3 border border-secondary rounded-lg mb-2 cursor-pointer transition-all hover:bg-main"><div class="font-bold flex items-center">${paper}ম পত্র <span class="text-sm font-normal text-muted ml-2">(${currentPaperProgress.toFixed(1)}%)</span> <span class="ml-2" data-info-btn-id="paper-${paper}-info-btn"></span></div><div class="w-1/3">${createProgressBar(currentPaperProgress, paper == 1 ? 'sky' : 'peach')}</div></summary>`; const tableWrapper = document.createElement('div'); tableWrapper.className = 'overflow-x-auto'; const table = document.createElement('table'); table.innerHTML = `<thead><tr><th class="w-1/4">অধ্যায়</th>${trackableItems.map(h => `<th class="text-center">${h}</th>`).join('')}</tr></thead>`; const tbody = document.createElement('tbody'); chapters.forEach(chapter => { const tr = document.createElement('tr'); let cells = `<td class="font-medium">${chapter.name}</td>`; trackableItems.forEach((item, i) => { const key = `s_${subjectKey}_${chapter.id}_${i}`; const status = Number(state.userData?.[key] ?? 0); const noteKey = `note_${key}`; const hasNote = !!state.userData?.[noteKey]; const fillNormalized = normalizeRawTo100(getRawPercentForStatus(status)); const isWon = Number(status) === 5; const isDone = Number(status) === 4; cells += `<td class="text-center"><button class="task-status-btn ${isWon ? 'wont' : ''}" data-key="${key}" style="--fill:${fillNormalized}%"><span class="relative z-10 text-white font-bold text-xs">${isWon ? '✖' : isDone ? tickIconSVG : ''}</span></button><button class="note-btn ${hasNote ? 'has-note' : ''} ml-2" data-key="${noteKey}" data-title="${chapter.name} - ${item}">${noteIconSVG}</button></td>`; }); tr.innerHTML = cells; tbody.appendChild(tr); }); table.appendChild(tbody); tableWrapper.appendChild(table); details.appendChild(tableWrapper); fragment.appendChild(details); }); container.innerHTML = ''; container.appendChild(fragment); setupInfoButtons(); }
         function renderAnalytics() { const container = document.getElementById('analytics-content'); if(!container) return; container.innerHTML = ''; const weakest = findWeakestSubject(); if(weakest) container.innerHTML += `<div class="mb-3"><p class="text-xs text-muted">Weakest Subject</p><p class="font-bold text-base text-red-500">${weakest.name} <span class="text-sm font-normal">(${weakest.score.toFixed(1)}%)</span></p></div>`; const timestamps = Object.entries(state.userData || {}).filter(([k]) => k.startsWith('timestamp_s_')).map(([k, v]) => ({ key: k.replace('timestamp_s_', ''), ts: new Date(v) })); if (!timestamps.length) { container.innerHTML += '<p class="text-muted text-xs">No activity data for chapter analysis.</p>'; return; } const chapterUpdates = {}; timestamps.forEach(({ key, ts }) => { const parts = key.split('_'); const chapKey = `${parts[0]}_${parts[1]}`; if (!chapterUpdates[chapKey] || ts > chapterUpdates[chapKey]) chapterUpdates[chapKey] = ts; }); const sorted = Object.entries(chapterUpdates).sort((a, b) => a[1] - b[1]); const leastTouched = sorted[0]; if (leastTouched) { const [chapKey, lastDate] = leastTouched; const [subject, chapId] = chapKey.split('_'); const chapInfo = syllabusData[subject]?.chapters.find(c => c.id == chapId); if (chapInfo) container.innerHTML += `<div><p class="text-xs text-muted">Least Studied Chapter</p><p class="font-bold text-base">${chapInfo.name}</p><p class="text-xs text-muted">(${syllabusData[subject].name}) - Last update: ${lastDate.toLocaleDateString()}</p></div>`; } }
         function setupInfoButtons() {
             const attach = (selector, data) => { const el = document.querySelector(selector); if(el) { el.innerHTML = ''; el.append(createInfoButton(data)); }};
@@ -215,57 +173,25 @@
         let updateTimeout;
         const debouncedUpdate = (key, value) => { clearTimeout(updateTimeout); updateTimeout = setTimeout(() => updateState(key, value), 250); }; 
         async function updateState(key, value) { const dataKey = key.startsWith('userData.') ? key.substring(9) : null; if (!dataKey) return; state.userData[dataKey] = value; const writeData = { key: dataKey, value: value }; const writes = [writeData]; if (dataKey.startsWith('s_')) { const timestampKey = `timestamp_${dataKey}`; const timestampValue = new Date().toISOString().split('T')[0]; state.userData[timestampKey] = timestampValue; writes.push({ key: timestampKey, value: timestampValue }); } try { for(const write of writes) { await writeToDB('pendingWrites', write); } await writeToDB('userData', { id: 'main', value: state.userData }); document.getElementById('connection-status').textContent = 'Saved locally'; 
-            rerenderProgressBarsOnly(); // Only update visuals, not the whole table
-            syncPendingWrites(); 
+            rerenderProgressBarsOnly(); syncPendingWrites(); 
         } catch (e) { console.error("DB write failed:", e); showToast('❌ Local save failed!', 'error'); } }
         
-        function rerenderProgressBarsOnly() {
-            try {
-                renderSubjectSelector(); renderProgressCards(); renderAnalytics(); 
-                const subjectKey = state.activeSubject; const paperProgress = calculateProgress(subjectKey, mainStudyItems);
-                updatePaperSummaryProgress(1, paperProgress.paper1);
-                updatePaperSummaryProgress(2, paperProgress.paper2);
-            } catch (e) { console.error("Error updating visuals:", e); renderAll(); }
-        }
-        function updatePaperSummaryProgress(paperNum, progressValue) {
-            const summaryEl = document.querySelector(`details summary [data-info-btn-id="paper-${paperNum}-info-btn"]`)?.closest('summary');
-            if (summaryEl) {
-                const progressDiv = summaryEl.querySelector('.w-1\\/3'); // Escaped '/'
-                const percentSpan = summaryEl.querySelector('.text-muted');
-                const color = paperNum === 1 ? 'sky' : 'peach';
-                if (progressDiv) progressDiv.innerHTML = createProgressBar(progressValue, color);
-                if (percentSpan) percentSpan.textContent = `(${progressValue.toFixed(1)}%)`;
-            }
-        }
+        function rerenderProgressBarsOnly() { try { renderSubjectSelector(); renderProgressCards(); renderAnalytics(); const subjectKey = state.activeSubject; const paperProgress = calculateProgress(subjectKey, mainStudyItems); updatePaperSummaryProgress(1, paperProgress.paper1); updatePaperSummaryProgress(2, paperProgress.paper2); } catch (e) { console.error("Error updating visuals:", e); renderAll(); } }
+        function updatePaperSummaryProgress(paperNum, progressValue) { const summaryEl = document.querySelector(`details summary [data-info-btn-id="paper-${paperNum}-info-btn"]`)?.closest('summary'); if (summaryEl) { const progressDiv = summaryEl.querySelector('.w-1\\/3'); const percentSpan = summaryEl.querySelector('.text-muted'); const color = paperNum === 1 ? 'sky' : 'peach'; if (progressDiv) progressDiv.innerHTML = createProgressBar(progressValue, color); if (percentSpan) percentSpan.textContent = `(${progressValue.toFixed(1)}%)`; } }
 
         async function syncPendingWrites() { 
             const syncStatusEl = document.getElementById('connection-status'); 
-            if (!db || !userDocRef) { 
-                syncStatusEl.textContent = 'Firebase Error'; 
-                syncStatusEl.className = 'status-indicator offline'; 
-                return; // Critical failure, don't proceed
-            } 
-            if (!navigator.onLine) { 
-                syncStatusEl.textContent = 'Offline'; 
-                syncStatusEl.className = 'status-indicator offline'; 
-                return; 
-            } 
+            if (!db || !userDocRef) { syncStatusEl.textContent = 'Firebase Error'; syncStatusEl.className = 'status-indicator offline'; return; } 
+            if (!navigator.onLine) { syncStatusEl.textContent = 'Offline'; syncStatusEl.className = 'status-indicator offline'; return; } 
             const pending = await getAllFromDB('pendingWrites'); 
-            if (pending.length === 0) { 
-                const lastSynced = localStorage.getItem('lastSynced'); 
-                syncStatusEl.textContent = lastSynced ? `Synced: ${lastSynced}` : 'Synced'; 
-                syncStatusEl.className = 'status-indicator online'; 
-                return; 
-            } 
+            if (pending.length === 0) { const lastSynced = localStorage.getItem('lastSynced'); syncStatusEl.textContent = lastSynced ? `Synced: ${lastSynced}` : 'Synced'; syncStatusEl.className = 'status-indicator online'; return; } 
             syncStatusEl.textContent = `Syncing...`; 
             try { 
                 const batch = writeBatch(db); 
-                // Fix 1: Ensure unique keys are written just once in a batch if needed (though keyPath='key' should prevent duplicates)
-                const updates = {};
-                pending.forEach(item => { updates[item.key] = item.value }); // Last write wins for duplicates
+                const updates = {}; pending.forEach(item => { updates[item.key] = item.value }); 
                 Object.entries(updates).forEach(([key, value]) => batch.update(userDocRef, { [key]: value }));
-                
                 await batch.commit(); 
+                // Only clear writes if commit was successful
                 await clearDBStore('pendingWrites'); 
                 const now = new Date().toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }); 
                 localStorage.setItem('lastSynced', now); 
@@ -324,27 +250,118 @@
         let countdownInterval;
         function startCountdown() { if(countdownInterval) clearInterval(countdownInterval); const target = new Date('2025-12-12T00:00:00+06:00'); const countdownEl = document.getElementById('countdown'); if(!countdownEl) return; const tick = () => { const diff = Math.max(0, target - new Date()); const d = Math.floor(diff / 864e5), h = Math.floor((diff % 864e5) / 36e5), m = Math.floor((diff % 36e5) / 6e4), s = Math.floor((diff % 6e4) / 1e3); countdownEl.innerHTML = `<div class="text-center"><div class="countdown-num">${d}</div><div class="countdown-label">দিন</div></div><div class="text-center"><div class="countdown-num">${String(h).padStart(2,'0')}</div><div class="countdown-label">ঘণ্টা</div></div><div class="text-center"><div class="countdown-num">${String(m).padStart(2,'0')}</div><div class="countdown-label">মিনিট</div></div><div class="text-center"><div class="countdown-num">${String(s).padStart(2,'0')}</div><div class="countdown-label">সেকেন্ড</div></div>`; }; tick(); countdownInterval = setInterval(tick, 1000); }
         function setupThemeToggle() { const btn = document.getElementById('theme-toggle-btn'); const meta = document.getElementById('theme-color-meta'); const applyTheme = (theme) => { document.documentElement.setAttribute('data-theme', theme); btn.textContent = theme === 'dark' ? '☀️' : '🌙'; meta.content = theme === 'dark' ? '#1c1c1c' : '#f8f7f2'; }; btn.addEventListener('click', () => { const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; localStorage.setItem('theme', newTheme); applyTheme(newTheme); }); applyTheme(localStorage.getItem('theme') || 'dark'); }
-        function setupViewToggle() { const btn = document.getElementById('view-toggle-btn'); const viewportMeta = document.querySelector('meta[name="viewport"]'); const applyView = (mode) => { if (mode === 'desktop') { viewportMeta.setAttribute('content', 'width=1280, initial-scale=1'); document.body.classList.add('desktop-view'); } else { viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0'); document.body.classList.remove('desktop-view'); } }; btn.addEventListener('click', () => { const newMode = document.body.classList.contains('desktop-view') ? 'mobile' : 'desktop'; localStorage.setItem('viewMode', newMode); applyView(newMode); }); applyView(localStorage.getItem('viewMode') || 'mobile'); }
+        function setupViewToggle() { 
+            const btn = document.getElementById('view-toggle-btn'); 
+            const viewportMeta = document.querySelector('meta[name="viewport"]'); 
+            const applyView = (mode) => { 
+                // Apply class *before* changing viewport to minimize flash
+                if (mode === 'desktop') { 
+                    document.body.classList.add('desktop-view'); 
+                    viewportMeta.setAttribute('content', 'width=1280, initial-scale=1'); 
+                } else { // Mobile is default
+                    document.body.classList.remove('desktop-view'); 
+                    viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0'); 
+                } 
+            }; 
+            btn.addEventListener('click', () => { 
+                const isDesktop = document.body.classList.contains('desktop-view'); 
+                const newMode = isDesktop ? 'mobile' : 'desktop'; 
+                localStorage.setItem('viewMode', newMode); 
+                applyView(newMode); 
+            }); 
+            // Apply initial view based on localStorage or default to 'mobile'
+            applyView(localStorage.getItem('viewMode') || 'mobile'); 
+        }
         
-        function renderAll() { try { renderSubjectSelector(); renderProgressCards(); renderSyllabusContent(); renderAnalytics(); } catch (e) { console.error("RenderAll failed:", e); }}
+        function renderAll() { 
+            try { 
+                renderSubjectSelector(); 
+                renderProgressCards(); 
+                renderSyllabusContent(); 
+                renderAnalytics(); 
+            } catch (e) { 
+                console.error("RenderAll failed:", e); 
+                // Display error to user?
+                const container = document.getElementById('app-container');
+                if (container) container.innerHTML = '<div class="text-red-500 p-4">Error rendering dashboard. Please check console.</div>';
+            }
+        }
         
         async function startApp() {
             const syncStatusEl = document.getElementById('connection-status');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const mainContentGrid = document.getElementById('main-content-grid');
+
             syncStatusEl.textContent = 'Initializing...';
-            setupViewToggle();
-            try { await openDB(); } catch(e) { console.error("Failed to open IndexedDB:", e); syncStatusEl.textContent = 'DB Error'; }
-            try { syncStatusEl.textContent = 'Loading cache...'; const cachedData = await getFromDB('userData', 'main'); if (cachedData) { state.userData = cachedData.value || {}; } } catch (e) { console.error("Cache load failed", e); }
-            if(db) { syncStatusEl.textContent = 'Connecting...'; try { onSnapshot(userDocRef, (snap) => { if (snap.exists()) { const firestoreData = snap.data(); state.userData = { ...(state.userData || {}), ...firestoreData }; writeToDB('userData', { id: 'main', value: state.userData }); renderAll(); } syncPendingWrites(); }, (error) => { console.error("Firestore error:", error); syncStatusEl.textContent = 'Sync Failed'; syncStatusEl.className = 'status-indicator offline'; }); } catch(e) { console.error("onSnapshot failed:", e); syncStatusEl.textContent = 'Firebase Error'; syncStatusEl.className = 'status-indicator offline';}
-            } else { syncStatusEl.textContent = 'Firebase Failed'; syncStatusEl.className = 'status-indicator offline'; }
-            renderAll();
-            setupEventHandlers();
-            setupInfoButtons();
-            startCountdown();
-            setupThemeToggle();
-            document.getElementById('force-sync-btn').addEventListener('click', syncPendingWrites);
-            window.addEventListener('online', syncPendingWrites); window.addEventListener('offline', () => { syncStatusEl.textContent = 'Offline'; syncStatusEl.className = 'status-indicator offline'; });
-            syncPendingWrites();
-            window.addEventListener('beforeunload', () => clearInterval(countdownInterval));
+            setupViewToggle(); // Set view mode early
+
+            try {
+                await openDB();
+                syncStatusEl.textContent = 'Loading cache...';
+                const cachedData = await getFromDB('userData', 'main');
+                if (cachedData) { state.userData = cachedData.value || {}; }
+            } catch (e) {
+                console.error("DB Initialization or Cache Load failed:", e);
+                syncStatusEl.textContent = 'DB Error';
+            }
+
+            // Attempt initial render with cached data before connecting to Firebase
+            try {
+                renderAll();
+                if(loadingIndicator) loadingIndicator.style.display = 'none'; // Hide loading
+                if(mainContentGrid) mainContentGrid.style.display = 'grid'; // Show content
+                state.isInitialized = true; // Mark app as initialized
+            } catch (e) {
+                console.error("Initial render failed:", e);
+                 if(loadingIndicator) loadingIndicator.textContent = 'Error during initial render. Check console.';
+            }
+
+            // Setup Firebase listener after initial render
+            if(db && userDocRef) {
+                syncStatusEl.textContent = 'Connecting...';
+                try {
+                    onSnapshot(userDocRef, (snap) => {
+                        if (snap.exists()) {
+                            const firestoreData = snap.data();
+                            const requiresUpdate = JSON.stringify(state.userData) !== JSON.stringify({ ...(state.userData || {}), ...firestoreData });
+                            state.userData = { ...(state.userData || {}), ...firestoreData };
+                            writeToDB('userData', { id: 'main', value: state.userData });
+                            // Only re-render if data has actually changed and app is initialized
+                            if (requiresUpdate && state.isInitialized) { 
+                                renderAll(); 
+                            }
+                        }
+                        syncPendingWrites(); // Sync after getting snapshot
+                    }, (error) => {
+                        console.error("Firestore onSnapshot error:", error);
+                        syncStatusEl.textContent = 'Sync Failed';
+                        syncStatusEl.className = 'status-indicator offline';
+                    });
+                } catch(e) {
+                    console.error("onSnapshot setup failed:", e);
+                    syncStatusEl.textContent = 'Firebase Error';
+                    syncStatusEl.className = 'status-indicator offline';
+                }
+            } else {
+                syncStatusEl.textContent = 'Firebase Failed';
+                syncStatusEl.className = 'status-indicator offline';
+            }
+
+            // Setup remaining parts only after initial render attempt
+            if (state.isInitialized) {
+                setupEventHandlers();
+                setupInfoButtons(); // Ensure these are called after elements exist
+                startCountdown();
+                setupThemeToggle(); // Theme toggle can be set up earlier if preferred
+                document.getElementById('force-sync-btn')?.addEventListener('click', syncPendingWrites);
+                window.addEventListener('online', syncPendingWrites); 
+                window.addEventListener('offline', () => { 
+                    syncStatusEl.textContent = 'Offline'; 
+                    syncStatusEl.className = 'status-indicator offline'; 
+                });
+                syncPendingWrites(); // Initial sync check
+                window.addEventListener('beforeunload', () => clearInterval(countdownInterval));
+            }
         }
         startApp();
     </script>
