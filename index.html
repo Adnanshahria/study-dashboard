@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google" content="notranslate" />
     <meta name="theme-color" id="theme-color-meta" content="#1c1c1c" />
-    <title>AS</title> 
+    <title>AS Study Dashboard v12.3 (Final)</title> 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -361,9 +361,9 @@
                                     // FIX: Changed rerenderAll to renderAll
                                     renderAll(); // Use renderAll() to ensure everything is drawn correctly
                                     state.lastCompositeProgress = calculateComposite().composite;
-                                    if(!isFirstSnapshotisFirstSnapshot) {
-                                        shshowToasowToastshshowToasowToast('🔄 Data synced from cloud successfully!', 'success'); 
-                                    }7
+                                    if(!isFirstSnapshot) {
+                                        showToast('🔄 Data synced from cloud successfully!', 'success'); 
+                                    }
                                 } 
                             }
                         } else { console.warn("User document doesn't exist in Firestore."); } 
@@ -387,5 +387,3 @@
     </script>
 </body>
 </html>
-
-
