@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google" content="notranslate" />
     <meta name="theme-color" id="theme-color-meta" content="#1c1c1c" />
-    <title>AS Study Dashboard v14.0 (Advanced Goal Management)</title> 
+    <title>AS Study Dashboard v14.1 (Data Migration Fix)</title> 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -263,17 +263,29 @@
             const container = document.getElementById('goal-tracker-card');
             if (!container) return;
 
-            const goals = state.userData.goals || { today: [], weekly: [] };
-            const todayProgress = goals.today.length > 0 ? (goals.today.filter(g => g.completed).length / goals.today.length) * 100 : 0;
+            const allGoals = state.userData.goals || [];
+            
+            const todayISO = new Date().toISOString().slice(0, 10);
+            const todayGoals = allGoals.filter(g => g.dueDate === todayISO);
+
             const weekRange = getWeekDateRange(state.currentWeeklyViewDate);
-            const weeklyGoalsForCurrentView = goals.weekly.filter(g => {
+            const weeklyGoalsForCurrentView = allGoals.filter(g => {
                 if (!g.dueDate) return false; 
                 const goalDate = new Date(g.dueDate);
                 return goalDate >= weekRange.start && goalDate <= weekRange.end;
             });
 
+            const customGoals = allGoals.filter(g => {
+                if(!g.dueDate) return true;
+                const goalDate = new Date(g.dueDate);
+                return goalDate < weekRange.start || goalDate > weekRange.end;
+            });
+            
+            const todayProgress = todayGoals.length > 0 ? (todayGoals.filter(g => g.completed).length / todayGoals.length) * 100 : 0;
             const weeklyProgress = weeklyGoalsForCurrentView.length > 0 ? (weeklyGoalsForCurrentView.filter(g => g.completed).length / weeklyGoalsForCurrentView.length) * 100 : 0;
-            const consolidatedProgress = (todayProgress + weeklyProgress) / 2;
+            const customProgress = customGoals.length > 0 ? (customGoals.filter(g => g.completed).length / customGoals.length) * 100 : 0;
+            
+            const consolidatedProgress = allGoals.length > 0 ? (allGoals.filter(g=>g.completed).length / allGoals.length) * 100 : 0;
             
             const tickSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4" style="color: var(--bg-card);"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg>`;
             const calendarSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c0-.414.336-.75.75-.75h10.5a.75.75 0 01.75.75v1.25c0 .414-.336.75-.75.75H5.5a.75.75 0 01-.75-.75V7.5z" clip-rule="evenodd" /></svg>`;
@@ -284,6 +296,7 @@
                 <div class="flex border-b border-secondary mb-3">
                     <button data-tab="today" class="goal-tab ${state.activeGoalTab === 'today' ? 'active' : ''}">আজকের লক্ষ্য</button>
                     <button data-tab="weekly" class="goal-tab ${state.activeGoalTab === 'weekly' ? 'active' : ''}">সাপ্তাহিক লক্ষ্য</button>
+                    <button data-tab="custom" class="goal-tab ${state.activeGoalTab === 'custom' ? 'active' : ''}">অন্যান্য</button>
                     <button data-tab="history" class="goal-tab ${state.activeGoalTab === 'history' ? 'active' : ''}">বিগত সপ্তাহ</button>
                 </div>
                 
@@ -291,16 +304,31 @@
             `;
             
             const contentContainer = container.querySelector('#goal-tab-content');
+            let goalsToShow, progressToShow;
+
+            switch(state.activeGoalTab) {
+                case 'today':
+                    goalsToShow = todayGoals;
+                    progressToShow = todayProgress;
+                    break;
+                case 'weekly':
+                    goalsToShow = weeklyGoalsForCurrentView;
+                    progressToShow = weeklyProgress;
+                    break;
+                case 'custom':
+                    goalsToShow = customGoals;
+                    progressToShow = customProgress;
+                    break;
+                case 'history':
+                    // Handled separately
+                    break;
+            }
             
             if (state.activeGoalTab === 'history') {
-                 const allGoals = [...(goals.today || []), ...(goals.weekly || [])];
                 const uniqueGoals = Array.from(new Map(allGoals.map(item => [item.id, item])).values());
-
                 let historyGoals;
                 if (state.historyViewState.mode === 'specificDate' && state.historyViewState.selectedDate) {
-                    historyGoals = uniqueGoals.filter(g => {
-                        return g.completed && g.completedAt && g.completedAt.startsWith(state.historyViewState.selectedDate);
-                    });
+                    historyGoals = uniqueGoals.filter(g => g.completed && g.completedAt && g.completedAt.startsWith(state.historyViewState.selectedDate));
                 } else { // last7days
                     historyGoals = uniqueGoals.filter(g => {
                         if (!g.completed || !g.completedAt) return false;
@@ -329,14 +357,13 @@
                              <span class="text-xs text-muted">${new Date(goal.completedAt).toLocaleDateString('bn-BD')}</span>
                         </li>`).join('')}</ul>`);
             } else {
-                const goalsToShow = state.activeGoalTab === 'today' ? goals.today : weeklyGoalsForCurrentView;
-                const progressToShow = state.activeGoalTab === 'today' ? todayProgress : weeklyProgress;
-                
                 let tabHeader = '';
                 if(state.activeGoalTab === 'weekly') {
                      tabHeader = `<div class="text-xs text-center text-muted mb-2 font-semibold flex justify-center items-center gap-2">
-                        <span>${weekRange.startFormatted} - ${weekRange.endFormatted}</span>
-                        <label id="week-selector-label" class="cursor-pointer">${calendarSVG}</label>
+                        <label id="week-selector-label" class="cursor-pointer flex items-center gap-2">
+                           <span>${weekRange.startFormatted} - ${weekRange.endFormatted}</span>
+                           ${calendarSVG}
+                        </label>
                         <input type="date" id="week-selector-input" class="hidden absolute">
                     </div>`;
                 }
@@ -344,7 +371,7 @@
                 contentContainer.innerHTML = `
                     ${tabHeader}
                     <div class="mb-3">
-                        <div class="text-xs flex justify-between items-center mb-1"><span>${state.activeGoalTab === 'today' ? 'আজকের' : 'সাপ্তাহিক'} অগ্রগতি</span> <strong>${progressToShow.toFixed(0)}%</strong></div>
+                        <div class="text-xs flex justify-between items-center mb-1"><span>${{'today':'আজকের', 'weekly':'সাপ্তাহিক', 'custom':'অন্যান্য'}[state.activeGoalTab]} অগ্রগতি</span> <strong>${progressToShow.toFixed(0)}%</strong></div>
                         ${createProgressBar(progressToShow, 'sky')}
                     </div>
                     <ul id="goal-list" class="space-y-2 mb-4">
@@ -388,49 +415,28 @@
 
         // --- State Update & Sync Logic ---
         let updateTimeout; let noteModalOverlay, noteModalTitle, noteTextarea, syncModalOverlay;
-        async function updateState(key, value, debounce = false) {
-            // Simplified for goals
-            if (key === 'userData.goals') {
-                state.userData.goals = value;
-            } else {
-                const dataKey = key.startsWith('userData.') ? key.substring(9) : null; 
-                if (!dataKey) return;
-                state.userData[dataKey] = value;
+        async function updateState(key, value) {
+            const dataKey = key.startsWith('userData.') ? key.substring(9) : 'goals';
+            state.userData[dataKey] = value;
+            
+            const writesToQueue = [{ key: dataKey, value }];
+            if (dataKey.startsWith('s_')) { 
+                const timestampKey = `timestamp_${dataKey}`; 
+                state.userData[timestampKey] = new Date().toISOString(); 
+                writesToQueue.push({ key: timestampKey, value: state.userData[timestampKey] }); 
             }
 
-            const updateAction = async () => {
-                const writesToQueue = [];
-                if (key === 'userData.goals') {
-                    writesToQueue.push({ key: 'goals', value: value });
-                } else {
-                    const dataKey = key.substring(9);
-                    writesToQueue.push({ key: dataKey, value: value });
-                     if (dataKey.startsWith('s_')) { 
-                        const timestampKey = `timestamp_${dataKey}`; 
-                        state.userData[timestampKey] = new Date().toISOString(); 
-                        writesToQueue.push({ key: timestampKey, value: state.userData[timestampKey] }); 
-                    }
-                }
-
-                try { 
-                    for (const item of writesToQueue) { await writeToDB('pendingWrites', item); } 
-                    await writeToDB('userData', { id: 'main', value: state.userData }); 
-                    document.getElementById('connection-status').textContent = 'Saved locally'; 
-                    rerenderProgressBarsOnly(); 
-                    await updateSyncQueueCount(); 
-                    syncPendingWrites(); 
-                } catch (e) { 
-                    console.error("DB write failed:", e); 
-                    if (e.message === 'QuotaExceededError') { showToast('❌ Local storage is full!', 'error'); } 
-                    else { showToast('❌ Local save failed!', 'error'); } 
-                }
-            };
-
-            if (debounce) {
-                clearTimeout(updateTimeout);
-                updateTimeout = setTimeout(updateAction, 250);
-            } else {
-                await updateAction();
+            try { 
+                for (const item of writesToQueue) { await writeToDB('pendingWrites', item); } 
+                await writeToDB('userData', { id: 'main', value: state.userData }); 
+                document.getElementById('connection-status').textContent = 'Saved locally'; 
+                rerenderProgressBarsOnly(); 
+                await updateSyncQueueCount(); 
+                syncPendingWrites(); 
+            } catch (e) { 
+                console.error("DB write failed:", e); 
+                if (e.message === 'QuotaExceededError') { showToast('❌ Local storage is full!', 'error'); } 
+                else { showToast('❌ Local save failed!', 'error'); } 
             }
         }
 
@@ -460,21 +466,26 @@
                 const actionBtn = document.createElement('button');
                 actionBtn.textContent = options.actionText;
                 actionBtn.className = 'font-bold underline';
-                actionBtn.onclick = () => {
-                    options.action();
-                    t.remove();
-                };
+                actionBtn.onclick = () => { options.action(); t.remove(); };
                 t.appendChild(actionBtn);
             }
 
             container.appendChild(t); 
             setTimeout(() => t.classList.remove('opacity-0', 'translate-y-5'), 50); 
             
-            if (!options.action) { // Auto-dismiss if no action
+            const duration = options.duration || 4000;
+            if (!options.action) {
                 setTimeout(() => { 
                     t.classList.add('opacity-0', 'translate-y-5'); 
                     t.addEventListener('transitionend', () => t.remove()); 
-                }, options.duration || 4000); 
+                }, duration); 
+            } else {
+                 setTimeout(() => {
+                    if (document.body.contains(t)) {
+                         t.classList.add('opacity-0', 'translate-y-5'); 
+                         t.addEventListener('transitionend', () => t.remove()); 
+                    }
+                }, duration);
             }
         }
         let currentNoteKey = null; let initialNoteValue = '';
@@ -576,6 +587,11 @@
                             if(!dateEditor.classList.contains('hidden')) dateEditor.focus();
                         }
                     }
+
+                    if(target.closest('#week-selector-label')) {
+                        const dateInput = document.getElementById('week-selector-input');
+                        if(dateInput) dateInput.click();
+                    }
                 }
             });
             
@@ -649,14 +665,15 @@
         function makeGoalEditable(element) {
             const goalId = element.closest('.goal-list-item').dataset.goalId;
             const isTimeEl = element.classList.contains('goal-time');
-            const goals = state.userData.goals || { today: [], weekly: [] };
-            const goal = goals.today.find(g => g.id === goalId) || goals.weekly.find(g => g.id === goalId);
+            const allGoals = state.userData.goals || [];
+            const goal = allGoals.find(g => g.id === goalId);
             if(!goal) return;
 
             const input = document.createElement('input');
             input.type = isTimeEl ? 'number' : 'text';
             input.value = isTimeEl ? goal.estimateTimeMin || '' : goal.title;
             input.className = 'goal-add-input goal-inline-editor';
+            if(isTimeEl) input.placeholder = 'মিনিট';
             
             element.replaceWith(input);
             input.focus();
@@ -664,12 +681,15 @@
 
             const saveChanges = () => {
                 const newValue = input.value;
+                const goalIndex = allGoals.findIndex(g => g.id === goalId);
+                if (goalIndex === -1) return;
+
                 if(isTimeEl) {
-                    goal.estimateTimeMin = parseInt(newValue, 10) || null;
+                    allGoals[goalIndex].estimateTimeMin = parseInt(newValue, 10) || null;
                 } else {
-                    goal.title = newValue.trim() || goal.title;
+                    allGoals[goalIndex].title = newValue.trim() || goal.title;
                 }
-                updateState('userData.goals', goals);
+                updateState('userData.goals', allGoals);
             };
 
             input.addEventListener('blur', saveChanges);
@@ -683,86 +703,65 @@
         }
         
         function reorderGoals(draggedId, targetId) {
-            const goals = state.userData.goals || { today: [], weekly: [] };
-            const list = goals[state.activeGoalTab];
-            if(!list) return;
-
-            const draggedIndex = list.findIndex(g => g.id === draggedId);
-            const targetIndex = list.findIndex(g => g.id === targetId);
+            const allGoals = state.userData.goals || [];
+            
+            const draggedIndex = allGoals.findIndex(g => g.id === draggedId);
+            const targetIndex = allGoals.findIndex(g => g.id === targetId);
             if(draggedIndex === -1 || targetIndex === -1) return;
 
-            const [draggedItem] = list.splice(draggedIndex, 1);
-            list.splice(targetIndex, 0, draggedItem);
+            const [draggedItem] = allGoals.splice(draggedIndex, 1);
+            allGoals.splice(targetIndex, 0, draggedItem);
             
-            updateState('userData.goals', goals);
+            updateState('userData.goals', allGoals);
         }
 
         function addGoal(title, dueDate, estimateTime) {
             const newGoal = { id: `g_${Date.now()}`, title, completed: false, createdAt: new Date().toISOString(), dueDate: dueDate || null, estimateTimeMin: parseInt(estimateTime, 10) || null };
-            const currentGoals = state.userData.goals || { today: [], weekly: [] };
-            const todayISO = new Date().toISOString().slice(0, 10);
-
-            if (state.activeGoalTab === 'today') {
-                currentGoals.today.push(newGoal);
-                if (!currentGoals.weekly.find(g => g.id === newGoal.id)) { currentGoals.weekly.push(newGoal); }
-            } else if (state.activeGoalTab === 'weekly') {
-                currentGoals.weekly.push(newGoal);
-                if (dueDate === todayISO && !currentGoals.today.find(g => g.id === newGoal.id)) { currentGoals.today.push(newGoal); }
-            }
+            const currentGoals = state.userData.goals || [];
+            currentGoals.push(newGoal);
             updateState('userData.goals', currentGoals);
         }
 
         let undoTimeout;
         function toggleGoal(goalId) {
-            const currentGoals = JSON.parse(JSON.stringify(state.userData.goals || { today: [], weekly: [] }));
-            let goalToday = currentGoals.today.find(g => g.id === goalId);
-            let goalWeekly = currentGoals.weekly.find(g => g.id === goalId);
-            if (!goalToday && !goalWeekly) return;
-            const wasCompleted = goalToday ? goalToday.completed : goalWeekly.completed;
-            const newCompletedState = !wasCompleted;
-            const completedAt = newCompletedState ? new Date().toISOString() : null;
-            if(goalToday) { goalToday.completed = newCompletedState; goalToday.completedAt = completedAt; }
-            if(goalWeekly) { goalWeekly.completed = newCompletedState; goalWeekly.completedAt = completedAt; }
-            updateState('userData.goals', currentGoals);
+            const allGoals = JSON.parse(JSON.stringify(state.userData.goals || []));
+            const goal = allGoals.find(g => g.id === goalId);
+            if (!goal) return;
+
+            const wasCompleted = goal.completed;
+            goal.completed = !goal.completed;
+            goal.completedAt = goal.completed ? new Date().toISOString() : null;
+            
+            updateState('userData.goals', allGoals);
 
             if (wasCompleted) { 
                 clearTimeout(undoTimeout);
                 const undoAction = () => {
-                    const freshGoals = JSON.parse(JSON.stringify(state.userData.goals || { today: [], weekly: [] }));
-                    let goalToRevertToday = freshGoals.today.find(g => g.id === goalId);
-                    let goalToRevertWeekly = freshGoals.weekly.find(g => g.id === goalId);
-                    if (goalToRevertToday) { goalToRevertToday.completed = true; goalToRevertToday.completedAt = completedAt; }
-                    if (goalToRevertWeekly) { goalToRevertWeekly.completed = true; goalToRevertWeekly.completedAt = completedAt; }
-                    updateState('userData.goals', freshGoals);
+                    const freshGoals = JSON.parse(JSON.stringify(state.userData.goals || []));
+                    let goalToRevert = freshGoals.find(g => g.id === goalId);
+                    if (goalToRevert) {
+                        goalToRevert.completed = true;
+                        goalToRevert.completedAt = new Date().toISOString(); // Reset completedAt time
+                        updateState('userData.goals', freshGoals);
+                    }
                 };
                 showToast("সম্পন্ন তালিকা থেকে সরানো হয়েছে।", 'success', { actionText: "পুনরুদ্ধার", action: undoAction, duration: 5000 });
             }
         }
 
         function deleteGoal(goalId) {
-             const currentGoals = JSON.parse(JSON.stringify(state.userData.goals || { today: [], weekly: [] }));
-             currentGoals.today = currentGoals.today.filter(g => g.id !== goalId);
-             currentGoals.weekly = currentGoals.weekly.filter(g => g.id !== goalId);
+             let currentGoals = JSON.parse(JSON.stringify(state.userData.goals || []));
+             currentGoals = currentGoals.filter(g => g.id !== goalId);
              updateState('userData.goals', currentGoals);
         }
 
         function updateGoalDate(goalId, newDueDate) {
-            const currentGoals = JSON.parse(JSON.stringify(state.userData.goals || { today: [], weekly: [] }));
-            let goalToday = currentGoals.today.find(g => g.id === goalId);
-            let goalWeekly = currentGoals.weekly.find(g => g.id === goalId);
-            const todayISO = new Date().toISOString().slice(0, 10);
-            
-            if (goalWeekly) { goalWeekly.dueDate = newDueDate; }
-            const isInTodayList = !!goalToday;
-            const shouldBeInTodayList = newDueDate === todayISO;
-
-            if (shouldBeInTodayList && !isInTodayList) {
-                const goalRef = currentGoals.weekly.find(g => g.id === goalId);
-                if(goalRef) currentGoals.today.push(goalRef);
-            } else if (!shouldBeInTodayList && isInTodayList) {
-                currentGoals.today = currentGoals.today.filter(g => g.id !== goalId);
+            const allGoals = JSON.parse(JSON.stringify(state.userData.goals || []));
+            const goal = allGoals.find(g => g.id === goalId);
+            if (goal) {
+                goal.dueDate = newDueDate;
+                updateState('userData.goals', allGoals);
             }
-            updateState('userData.goals', currentGoals);
         }
 
         let countdownInterval;
@@ -804,7 +803,24 @@
             const mainContentGrid = document.getElementById('main-content-grid');
             if (!syncStatusEl || !loadingIndicator || !mainContentGrid) { console.error("Critical elements missing. Aborting."); document.body.innerHTML = "Initialization Error: Required elements not found."; return; }
             syncStatusEl.textContent = 'Initializing...';
-            try { await openDB(); syncStatusEl.textContent = 'Loading cache...'; const cachedData = await getFromDB('userData', 'main'); if (cachedData) { state.userData = cachedData.value || {}; if(!state.userData.goals) state.userData.goals = {today:[], weekly:[]}; } } catch (e) { console.error("DB/Cache Load failed:", e); syncStatusEl.textContent = 'DB Error'; }
+            try { 
+                await openDB(); 
+                syncStatusEl.textContent = 'Loading cache...'; 
+                const cachedData = await getFromDB('userData', 'main'); 
+                if (cachedData) { 
+                    state.userData = cachedData.value || {}; 
+                    if (state.userData.goals && !Array.isArray(state.userData.goals)) {
+                        const allGoals = [...(state.userData.goals.today || []), ...(state.userData.goals.weekly || [])];
+                        state.userData.goals = Array.from(new Map(allGoals.map(item => [item.id, item])).values());
+                    }
+                    if(!state.userData.goals) {
+                        state.userData.goals = []; 
+                    }
+                } 
+            } catch (e) { 
+                console.error("DB/Cache Load failed:", e); 
+                syncStatusEl.textContent = 'DB Error'; 
+            }
             
             // Render from cache first for instant UI
             try { renderAll(); loadingIndicator.style.display = 'none'; mainContentGrid.style.display = 'grid'; state.isInitialized = true; } catch (e) { console.error("Initial render from cache failed:", e); loadingIndicator.textContent = 'Error during initial render. Check console.'; }
@@ -817,13 +833,22 @@
                         let requiresUpdate = false; 
                         if (snap.exists()) { 
                             const firestoreData = snap.data(); 
-                            if (!firestoreData.goals) firestoreData.goals = {today:[], weekly:[]};
+
+                            if (firestoreData.goals && !Array.isArray(firestoreData.goals)) {
+                                const allGoals = [...(firestoreData.goals.today || []), ...(firestoreData.goals.weekly || [])];
+                                firestoreData.goals = Array.from(new Map(allGoals.map(item => [item.id, item])).values());
+                            }
+                            if (!firestoreData.goals) {
+                                firestoreData.goals = [];
+                            }
+                            
                             Object.keys(firestoreData).forEach(key => { 
                                 if (JSON.stringify(state.userData[key]) !== JSON.stringify(firestoreData[key])) { 
                                     state.userData[key] = firestoreData[key]; 
                                     requiresUpdate = true; 
                                 } 
                             }); 
+
                             if (requiresUpdate || isFirstSnapshot) {
                                 try { await writeToDB('userData', { id: 'main', value: state.userData }); } 
                                 catch (e) { console.error("Failed to write snapshot data to IDB:", e); if (e.message === 'QuotaExceededError') { showToast('❌ Storage full! Cannot save synced data.', 'error'); } } 
