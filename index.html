@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google" content="notranslate" />
     <meta name="theme-color" id="theme-color-meta" content="#1c1c1c" />
-    <title>AS Study Dashboard v12.3 (Final)</title> 
+    <title>AS Study Dashboard v13.4 (Enhanced Date Selection)</title> 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -36,8 +36,7 @@
         .pb-gradient-amber { background: linear-gradient(90deg, #fcd34d, #fbbf24); }
         .pb-gradient-cyan { background: linear-gradient(90deg, #67e8f9, #22d3ee); }
         .pb-gradient-rose { background: linear-gradient(90deg, #fb7185, #f43f5e); }
-        .pb-gradient-goal { background: repeating-linear-gradient(-45deg, var(--border-primary), var(--border-primary) 5px, var(--progress-track) 5px, var(--progress-track) 10px ); }
-
+        
         #countdown-card { background: linear-gradient(135deg, #d90429, #ef233c); box-shadow: 0 10px 25px rgba(217, 4, 41, 0.25); }
         .countdown-num { font-weight:800; font-size:24px; } .countdown-label { font-size:12px; opacity:0.95; }
         .subject-progress-svg circle { transition: stroke-dashoffset 0.4s ease-out; }
@@ -86,12 +85,28 @@
         body.desktop-view #selected-subject-main-progress,
         body.desktop-view #selected-subject-qb-progress { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         #syllabus-content table td, #syllabus-content table th { white-space: nowrap; }
-        #goal-input { width: 60px; padding: 2px 4px; border: 1px solid var(--border-primary); border-radius: 4px; background: var(--bg-main); text-align: right; margin-left: 5px; margin-right: 2px;}
+        
+        /* Goal Tracker Styles */
+        .goal-tab { padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; color: var(--text-muted); font-weight: 500;}
+        .goal-tab.active { color: var(--text-primary); border-bottom-color: var(--text-primary); font-weight: 700; }
+        .goal-list-item { display: flex; align-items: center; gap: 12px; padding: 8px 4px; border-bottom: 1px solid var(--border-secondary); }
+        .goal-list-item:last-child { border-bottom: none; }
+        .goal-tick-btn { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--border-primary); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        .goal-list-item.completed .goal-tick-btn { background-color: var(--text-primary); border-color: var(--text-primary); }
+        .goal-list-item.completed .goal-title { text-decoration: line-through; color: var(--text-muted); }
+        .goal-title { flex-grow: 1; font-weight: 500; }
+        .goal-action-btn { color: var(--text-muted); opacity: 0.5; transition: all 0.2s; }
+        .goal-action-btn:hover { opacity: 1; color: var(--text-primary); }
+        .goal-delete-btn:hover { color: #ef4444; }
+        .goal-add-input { background: var(--bg-main); border: 1px solid var(--border-primary); border-radius: 8px; padding: 8px 12px; }
+        .goal-date-editor { position: absolute; z-index: 10; }
+        #week-selector-label { cursor: pointer; }
+
     </style>
 </head>
 <body class="text-sm">
     <div id="offline-banner" style="display:none;" class="bg-red-600 text-white p-2 text-center fixed top-0 w-full z-50">
-        ⚠️ You are in offline mode. Changes will be synced when you are back online.
+        ⚠️ আপনি অফলাইন মোডে আছেন। সংযোগ ফিরে আসলে পরিবর্তনগুলো সিঙ্ক করা হবে।
     </div>
 
     <header id="header" class="sticky top-0 z-30 w-full bg-header border-b border-primary backdrop-blur-sm">
@@ -113,11 +128,11 @@
     <main id="app-container" class="container max-w-screen-xl mx-auto py-4 px-4">
         <div id="main-content-grid" class="main-grid grid grid-cols-3 gap-5" style="display: none;">
             <div class="left-column col-span-2 flex flex-col gap-5">
-                <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">Subject Selection <span id="subject-choice-info-btn"></span></h2><div id="subject-selector" class="flex justify-around">Loading...</div></div>
-                <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">Selected Subject Progress <span id="main-progress-info-btn"></span></h2><div id="selected-subject-main-progress" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">Loading...</div></div>
-                <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">Exam Progress <span id="exam-progress-info-btn"></span></h2><div id="selected-subject-exam-progress">Loading...</div></div>
-                <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">Question Bank Progress <span id="qb-progress-info-btn"></span></h2><div id="selected-subject-qb-progress" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">Loading...</div></div>
-                <section id="syllabus-shell" class="card"><h2 class="text-base font-bold mb-3">Syllabus Details</h2><div id="syllabus-content">Loading...</div></section>
+                <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">বিষয় নির্বাচন <span id="subject-choice-info-btn"></span></h2><div id="subject-selector" class="flex justify-around">Loading...</div></div>
+                <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">নির্বাচিত বিষয়ের অগ্রগতি <span id="main-progress-info-btn"></span></h2><div id="selected-subject-main-progress" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">Loading...</div></div>
+                <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">পরীক্ষার অগ্রগতি <span id="exam-progress-info-btn"></span></h2><div id="selected-subject-exam-progress">Loading...</div></div>
+                <div class="card"><h2 class="text-base font-bold mb-3 flex justify-between items-center">প্রশ্নব্যাংক অগ্রগতি <span id="qb-progress-info-btn"></span></h2><div id="selected-subject-qb-progress" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">Loading...</div></div>
+                <section id="syllabus-shell" class="card"><h2 class="text-base font-bold mb-3">সিলেবাস বিস্তারিত</h2><div id="syllabus-content">Loading...</div></section>
             </div>
 
             <div class="right-column col-span-1 grid grid-rows-[min-content,auto] gap-5">
@@ -127,11 +142,14 @@
                 </div>
                 <div class="flex flex-col gap-5">
                     <div class="card">
-                        <h2 class="text-base font-bold mb-3 flex justify-between items-center">Global Summary & Progress <span id="global-summary-info-btn"></span></h2>
+                        <h2 class="text-base font-bold mb-3 flex justify-between items-center">সার্বিক সারাংশ ও অগ্রগতি <span id="global-summary-info-btn"></span></h2>
                         <div id="overall-progress-container" class="mb-4">Loading Progress...</div>
                         <div id="streak-container" class="mb-4"></div>
-                        <div id="goal-setting-container" class="mb-4">Loading Goal...</div>
                         <div id="global-summary-container" class="flex flex-col gap-3">Loading Summaries...</div>
+                    </div>
+                    <!-- New Goal Tracker Card -->
+                    <div id="goal-tracker-card" class="card">
+                        <!-- Content will be rendered by JS -->
                     </div>
                 </div>
             </div>
@@ -139,9 +157,9 @@
         <div id="loading-indicator" class="text-center py-10">Initializing Dashboard...</div>
     </main>
 
-    <div id="info-modal-overlay" role="dialog" aria-modal="true"><div id="info-modal-content"><h3 id="info-modal-title" class="font-bold text-lg mb-2"></h3><p id="info-modal-desc" class="text-muted mb-3 text-sm"></p><div class="mb-2 font-semibold text-sm">Calculated Items:</div><ul id="info-modal-items" class="text-sm"></ul><button id="info-modal-close" class="mt-4 px-4 py-2 bg-rose-600 text-white rounded-lg w-full">Close</button></div></div>
-    <div id="note-modal-overlay" role="dialog" aria-modal="true"><div id="note-modal-content"><h3 id="note-modal-title" class="font-bold text-lg mb-3">Edit Note</h3><textarea id="note-textarea"></textarea><div class="flex justify-between gap-2 mt-4"><button id="note-modal-undo" class="px-3 py-2 text-sm bg-gray-300 text-black rounded-lg">Undo</button><button id="note-modal-clear" class="px-3 py-2 text-sm bg-yellow-500 text-black rounded-lg">Clear</button><div class="flex-grow"></div><button id="note-modal-cancel" class="px-4 py-2 text-sm bg-gray-500 text-white rounded-lg">Cancel</button><button id="note-modal-save" class="px-4 py-2 text-sm bg-green-600 text-white rounded-lg">Save</button></div></div></div>
-    <div id="sync-modal-overlay" role="dialog" aria-modal="true"><div id="sync-modal-content"><h3 class="font-bold text-lg mb-3">Pending Sync Items (<span id="sync-modal-count">0</span>)</h3><ul id="sync-queue-list" class="mb-4 max-h-60 overflow-y-auto"><li>No pending changes.</li></ul><div class="flex justify-between gap-2 mt-4"><button id="sync-modal-clear" class="px-4 py-2 text-sm bg-red-600 text-white rounded-lg">Clear Local Changes</button><button id="sync-modal-now" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg">Sync Now</button><button id="sync-modal-close" class="px-4 py-2 text-sm bg-gray-500 text-white rounded-lg">Close</button></div></div></div>
+    <div id="info-modal-overlay" role="dialog" aria-modal="true"><div id="info-modal-content"><h3 id="info-modal-title" class="font-bold text-lg mb-2"></h3><p id="info-modal-desc" class="text-muted mb-3 text-sm"></p><div class="mb-2 font-semibold text-sm">গণনাকৃত আইটেম:</div><ul id="info-modal-items" class="text-sm"></ul><button id="info-modal-close" class="mt-4 px-4 py-2 bg-rose-600 text-white rounded-lg w-full">বন্ধ করুন</button></div></div>
+    <div id="note-modal-overlay" role="dialog" aria-modal="true"><div id="note-modal-content"><h3 id="note-modal-title" class="font-bold text-lg mb-3">নোট সম্পাদনা করুন</h3><textarea id="note-textarea"></textarea><div class="flex justify-between gap-2 mt-4"><button id="note-modal-undo" class="px-3 py-2 text-sm bg-gray-300 text-black rounded-lg">পূর্বাবস্থায় ফেরান</button><button id="note-modal-clear" class="px-3 py-2 text-sm bg-yellow-500 text-black rounded-lg">মুছুন</button><div class="flex-grow"></div><button id="note-modal-cancel" class="px-4 py-2 text-sm bg-gray-500 text-white rounded-lg">বাতিল</button><button id="note-modal-save" class="px-4 py-2 text-sm bg-green-600 text-white rounded-lg">সংরক্ষণ</button></div></div></div>
+    <div id="sync-modal-overlay" role="dialog" aria-modal="true"><div id="sync-modal-content"><h3 class="font-bold text-lg mb-3">অমীমাংসিত সিঙ্ক (<span id="sync-modal-count">0</span>)</h3><ul id="sync-queue-list" class="mb-4 max-h-60 overflow-y-auto"><li>কোনো অমীমাংসিত পরিবর্তন নেই।</li></ul><div class="flex justify-between gap-2 mt-4"><button id="sync-modal-clear" class="px-4 py-2 text-sm bg-red-600 text-white rounded-lg">স্থানীয় পরিবর্তন মুছুন</button><button id="sync-modal-now" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg">এখন সিঙ্ক করুন</button><button id="sync-modal-close" class="px-4 py-2 text-sm bg-gray-500 text-white rounded-lg">বন্ধ করুন</button></div></div></div>
 
     <div id="toast-container" class="fixed right-4 bottom-5 z-50"></div>
 
@@ -168,16 +186,16 @@
         async function clearDBStore(storeName) { if (!idb) return; return new Promise((resolve, reject) => { try { const tx = idb.transaction(storeName, 'readwrite'); tx.oncomplete = () => resolve(); tx.onerror = (e) => reject(tx.error); const store = tx.objectStore(storeName); store.clear(); } catch(e) { reject(e); } }); }
 
         // --- App State & Data ---
-        const state = { userData: {}, activeSubject: 'biology', syllabusOpenState: {}, isInitialized: false, lastCompositeProgress: 0 };
-        const syllabusData = { biology: { name: "Biology", chapters: [ { id: 1, name: "Cell & its Structure", paper: 1 }, { id: 2, name: "Cell Division", paper: 1 }, { id: 3, name: "Cell Chemistry", paper: 1 }, { id: 4, name: "Microorganism", paper: 1 }, { id: 5, name: "Algae & Fungi", paper: 1 }, { id: 6, name: "Bryophyta & Pteridophyta", paper: 1 }, { id: 7, name: "Naked & Covered Seed Plants", paper: 1 }, { id: 8, name: "Tissue & Tissue System", paper: 1 }, { id: 9, name: "Plant Physiology", paper: 1 }, { id: 10, name: "Plant Reproduction", paper: 1 }, { id: 11, name: "Biotechnology", paper: 1 }, { id: 12, name: "Environment, Spread & Conservation", paper: 1 }, { id: 13, name: "Animal Diversity & Classification", paper: 2 }, { id: 14, name: "Animal Introduction (Hydra)", paper: 2 }, { id: 15, name: "Animal Introduction (Grasshopper)", paper: 2 }, { id: 16, name: "Animal Introduction (Rui Fish)", paper: 2 }, { id: 17, name: "Human Physiology: Digestion", paper: 2 }, { id: 18, name: "Human Physiology: Blood Circulation", paper: 2 }, { id: 19, name: "Human Physiology: Respiration", paper: 2 }, { id: 20, name: "Human Physiology: Excretion", paper: 2 }, { id: 21, name: "Human Physiology: Locomotion", paper: 2 }, { id: 22, name: "Human Physiology: Coordination", paper: 2 }, { id: 23, name: "Continuity of Human Life", paper: 2 }, { id: 24, name: "Human Body's Defense", paper: 2 }, { id: 25, name: "Genetics & Evolution", paper: 2 }, { id: 26, name: "Animal Behavior", paper: 2 } ] }, chemistry: { name: "Chemistry", chapters: [ { id: 1, name: "Safe Use of Laboratory", paper: 1 }, { id: 2, name: "Qualitative Chemistry", paper: 1 }, { id: 3, name: "Periodic Properties of Elements", paper: 1 }, { id: 4, name: "Chemical Changes", paper: 1 }, { id: 5, name: "Applied Chemistry", paper: 1 }, { id: 6, name: "Environmental Chemistry", paper: 2 }, { id: 7, name: "Organic Chemistry", paper: 2 }, { id: 8, name: "Quantitative Chemistry", paper: 2 }, { id: 9, name: "Electrochemistry", paper: 2 }, { id: 10, name: "Economic Chemistry", paper: 2 } ] }, physics: { name: "Physics", chapters: [ { id: 1, name: "Physical World and Measurement", paper: 1 }, { id: 2, name: "Vector", paper: 1 }, { id: 3, name: "Dynamics", paper: 1 }, { id: 4, name: "Newtonian Mechanics", paper: 1 }, { id: 5, name: "Work, Energy and Power", paper: 1 }, { id: 6, name: "Gravitation and Gravity", paper: 1 }, { id: 7, name: "Structural Properties of Matter", paper: 1 }, { id: 8, name: "Periodic Motion", paper: 1 }, { id: 9, name: "Wave", paper: 1 }, { id: 10, name: "Ideal Gas and Gas Dynamics", paper: 1 }, { id: 11, name: "Thermodynamics", paper: 2 }, { id: 12, name: "Static Electricity", paper: 2 }, { id: 13, name: "Current Electricity", paper: 2 }, { id: 14, name: "Magnetic Effect of Current", paper: 2 }, { id: 15, name: "Electromagnetic Induction", paper: 2 }, { id: 16, name: "Geometric Optics", paper: 2 }, { id: 17, name: "Physical Optics", paper: 2 }, { id: 18, name: "Modern Physics", paper: 2 }, { id: 19, name: "Atomic Model and Nuclear Physics", paper: 2 }, { id: 20, name: "Semiconductor and Electronics", paper: 2 }, { id: 21, name: "Astronomy", paper: 2 } ] } };
-        const trackableItems = ["Main Book", "Class", "Rev Class", "Meditrics", "MQB (Unmesh)", "Retina QB", "Secret Files Exam", "Daily Exam", "Weekly Exam", "Campus Exam", "Revision 1", "Revision 2"];
-        const mainStudyItems = ["Main Book", "Class", "Meditrics"]; const revisionItems = ["Revision 1", "Revision 2", "Rev Class"]; const examItems = ["Secret Files Exam", "Daily Exam", "Weekly Exam", "Campus Exam"]; const qbItems = ["MQB (Unmesh)", "Retina QB"];
+        const state = { userData: {}, activeSubject: 'biology', syllabusOpenState: {}, isInitialized: false, lastCompositeProgress: 0, activeGoalTab: 'today', historyViewState: { mode: 'last7days', selectedDate: null }, currentWeeklyViewDate: new Date().toISOString() };
+        const syllabusData = { biology: { name: "জীববিজ্ঞান", chapters: [ { id: 1, name: "কোষ ও এর গঠন", paper: 1 }, { id: 2, name: "কোষ বিভাজন", paper: 1 }, { id: 3, name: "কোষ রসায়ন", paper: 1 }, { id: 4, name: "অণুজীব", paper: 1 }, { id: 5, name: "শৈবাল ও ছত্রাক", paper: 1 }, { id: 6, name: "ব্রায়োফাইটা ও টেরিডোফাইটা", paper: 1 }, { id: 7, name: "নগ্নবীজি ও আবৃতবীজি উদ্ভিদ", paper: 1 }, { id: 8, name: "টিস্যু ও টিস্যুতন্ত্র", paper: 1 }, { id: 9, name: "উদ্ভিদ শরীরতত্ত্ব", paper: 1 }, { id: 10, name: "উদ্ভিদ প্রজনন", paper: 1 }, { id: 11, name: "জীব প্রযুক্তি", paper: 1 }, { id: 12, name: "জীবের পরিবেশ, বিস্তার ও সংরক্ষণ", paper: 1 }, { id: 13, name: "প্রাণির বৈচিত্র্য ও শ্রেণিবিন্যাস", paper: 2 }, { id: 14, name: "প্রাণির পরিচিতি (হাইড্রা)", paper: 2 }, { id: 15, name: "প্রাণির পরিচিতি (ঘাসফড়িং)", paper: 2 }, { id: 16, name: "প্রাণির পরিচিতি (রুই মাছ)", paper: 2 }, { id: 17, name: "মানব শরীরতত্ত্ব: পরিপাক ও শোষণ", paper: 2 }, { id: 18, name: "মানব শরীরতত্ত্ব: রক্ত ও সঞ্চালন", paper: 2 }, { id: 19, name: "মানব শরীরতত্ত্ব: শ্বাসক্রিয়া ও শ্বসন", paper: 2 }, { id: 20, name: "মানব শরীরতত্ত্ব: বর্জ্য ও নিষ্কাশন", paper: 2 }, { id: 21, name: "মানব শরীরতত্ত্ব: চলন ও অঙ্গচালনা", paper: 2 }, { id: 22, name: "মানব শরীরতত্ত্ব: সমন্বয় ও নিয়ন্ত্রণ", paper: 2 }, { id: 23, name: "মানব জীবনের ধারাবাহিকতা", paper: 2 }, { id: 24, name: "মানবদেহের প্রতিরক্ষা", paper: 2 }, { id: 25, name: "জিনতত্ত্ব ও বিবর্তন", paper: 2 }, { id: 26, name: "প্রাণির আচরণ", paper: 2 } ] }, chemistry: { name: "রসায়ন", chapters: [ { id: 1, name: "ল্যাবরেটরির নিরাপদ ব্যবহার", paper: 1 }, { id: 2, name: "গুণগত রসায়ন", paper: 1 }, { id: 3, name: "মৌলের পর্যায়বৃত্ত ধর্ম ও রাসায়নিক বন্ধন", paper: 1 }, { id: 4, name: "রাসায়নিক পরিবর্তন", paper: 1 }, { id: 5, name: "কর্মমূখী রসায়ন", paper: 1 }, { id: 6, name: "পরিবেশ রসায়ন", paper: 2 }, { id: 7, name: "জৈব রসায়ন", paper: 2 }, { id: 8, name: "পরিমাণগত রসায়ন", paper: 2 }, { id: 9, name: "তড়িৎ রসায়ন", paper: 2 }, { id: 10, name: "অর্থনৈতিক রসায়ন", paper: 2 } ] }, physics: { name: "পদার্থবিজ্ঞান", chapters: [ { id: 1, name: "ভৌত জগত ও পরিমাপ", paper: 1 }, { id: 2, name: "ভেক্টর", paper: 1 }, { id: 3, name: "গতিবিদ্যা", paper: 1 }, { id: 4, name: "নিউটনিয়ান বলবিদ্যা", paper: 1 }, { id: 5, name: "কাজ, শক্তি ও ক্ষমতা", paper: 1 }, { id: 6, name: "মহাকর্ষ ও অভিকর্ষ", paper: 1 }, { id: 7, name: "পদার্থের গাঠনিক ধর্ম", paper: 1 }, { id: 8, name: "পর্যাবৃত্তিক গতি", paper: 1 }, { id: 9, name: "তরঙ্গ", paper: 1 }, { id: 10, name: "আদর্শ গ্যাস ও গ্যাসের গতিতত্ত্ব", paper: 1 }, { id: 11, name: "তাপগতিবিদ্যা", paper: 2 }, { id: 12, name: "স্থির তড়িৎ", paper: 2 }, { id: 13, name: "চল তড়িৎ", paper: 2 }, { id: 14, name: "তড়িৎ প্রবাহের চৌম্বক ক্রিয়া ও চুম্বকত্ব", paper: 2 }, { id: 15, name: "তড়িৎ চৌম্বক আবেশ ও পরিবর্তী প্রবাহ", paper: 2 }, { id: 16, name: "জ্যামিতিক আলোকবিজ্ঞান", paper: 2 }, { id: 17, name: "ভৌত আলোকবিজ্ঞা", paper: 2 }, { id: 18, name: "আধুনিক পদার্থবিজ্ঞানের সূচনা", paper: 2 }, { id: 19, name: "পরমাণুর মডেল এবং নিউক্লিয়ার পদার্থবিজ্ঞান", paper: 2 }, { id: 20, name: "সেমিকন্ডাক্টর ও ইলেকট্রনিকস", paper: 2 }, { id: 21, name: "জ্যোতির্বিজ্ঞান", paper: 2 } ] } };
+        const trackableItems = ["মূল বই", "Class", "Rev Class", "Meditrics", "MQB (Unmesh)", "Retina QB", "Secret Files Exam", "Daily Exam", "Weekly Exam", "Campus Exam", "রিভিশন ১", "রিভিশন ২"];
+        const mainStudyItems = ["মূল বই", "Class", "Meditrics"]; const revisionItems = ["রিভিশন ১", "রিভিশন ২", "Rev Class"]; const examItems = ["Secret Files Exam", "Daily Exam", "Weekly Exam", "Campus Exam"]; const qbItems = ["MQB (Unmesh)", "Retina QB"];
         const TARGET_DATE_STRING = '2025-12-12';
 
         // --- Calculation Logic ---
-        const getRawPercentForStatus = (status) => (typeof status === 'number' && status >= 0 && status <= 4) ? status * 20 : 0;
+        const getRawPercentForStatus = (status) => (status >= 0 && status <= 5) ? status * 20 : 0;
         const normalizeRawTo100 = (raw) => raw <= 0 ? 0 : Math.min(100, (raw / 80) * 100);
-        function calculateProgress(subjectKey, itemsToCount) { let currentItems = [...itemsToCount]; if (subjectKey === 'physics') currentItems = currentItems.filter(item => item !== 'Main Book'); const subjectData = syllabusData[subjectKey]; if (!subjectData || !subjectData.chapters) return { overall: 0, paper1: 0, paper2: 0 }; const mulBoiIndex = trackableItems.indexOf("Main Book"); const meditricsIndex = trackableItems.indexOf("Meditrics"); const useMaxLogic = currentItems.includes("Main Book") && currentItems.includes("Meditrics"); let itemIndices = currentItems.map(item => trackableItems.indexOf(item)).filter(i => i >= 0); let p1Sum = 0, p1Count = 0, p2Sum = 0, p2Count = 0; subjectData.chapters.forEach(ch => { let rawSum = 0; let itemsForAvg = itemIndices.length; if (useMaxLogic) { const nonSpecial = itemIndices.filter(i => i !== mulBoiIndex && i !== meditricsIndex); nonSpecial.forEach(i => { rawSum += getRawPercentForStatus(state.userData?.[`s_${subjectKey}_${ch.id}_${i}`] ?? 0); }); const mulBoiStatus = getRawPercentForStatus(state.userData?.[`s_${subjectKey}_${ch.id}_${mulBoiIndex}`] ?? 0); const medStatus = getRawPercentForStatus(state.userData?.[`s_${subjectKey}_${ch.id}_${meditricsIndex}`] ?? 0); rawSum += Math.max(mulBoiStatus, medStatus); itemsForAvg = nonSpecial.length + 1; } else { itemIndices.forEach(i => { rawSum += getRawPercentForStatus(state.userData?.[`s_${subjectKey}_${ch.id}_${i}`] ?? 0); }); } const normalized = normalizeRawTo100(itemsForAvg > 0 ? rawSum / itemsForAvg : 0); if (ch.paper === 1) { p1Sum += normalized; p1Count++; } else { p2Sum += normalized; p2Count++; } }); const paper1 = p1Count > 0 ? p1Sum / p1Count : 0; const paper2 = p2Count > 0 ? p2Sum / p2Count : 0; const overall = (p1Count + p2Count > 0) ? (p1Sum + p2Sum) / (p1Count + p2Count) : 0; return { overall, paper1, paper2 }; }
+        function calculateProgress(subjectKey, itemsToCount) { let currentItems = [...itemsToCount]; if (subjectKey === 'physics') currentItems = currentItems.filter(item => item !== 'মূল বই'); const subjectData = syllabusData[subjectKey]; if (!subjectData || !subjectData.chapters) return { overall: 0, paper1: 0, paper2: 0 }; const mulBoiIndex = trackableItems.indexOf("মূল বই"); const meditricsIndex = trackableItems.indexOf("Meditrics"); const useMaxLogic = currentItems.includes("মূল বই") && currentItems.includes("Meditrics"); let itemIndices = currentItems.map(item => trackableItems.indexOf(item)).filter(i => i >= 0); let p1Sum = 0, p1Count = 0, p2Sum = 0, p2Count = 0; subjectData.chapters.forEach(ch => { let rawSum = 0; let itemsForAvg = itemIndices.length; if (useMaxLogic) { const nonSpecial = itemIndices.filter(i => i !== mulBoiIndex && i !== meditricsIndex); nonSpecial.forEach(i => { rawSum += getRawPercentForStatus(state.userData?.[`s_${subjectKey}_${ch.id}_${i}`] ?? 0); }); const mulBoiStatus = getRawPercentForStatus(state.userData?.[`s_${subjectKey}_${ch.id}_${mulBoiIndex}`] ?? 0); const medStatus = getRawPercentForStatus(state.userData?.[`s_${subjectKey}_${ch.id}_${meditricsIndex}`] ?? 0); rawSum += Math.max(mulBoiStatus, medStatus); itemsForAvg = nonSpecial.length + 1; } else { itemIndices.forEach(i => { rawSum += getRawPercentForStatus(state.userData?.[`s_${subjectKey}_${ch.id}_${i}`] ?? 0); }); } const normalized = normalizeRawTo100(itemsForAvg > 0 ? rawSum / itemsForAvg : 0); if (ch.paper === 1) { p1Sum += normalized; p1Count++; } else { p2Sum += normalized; p2Count++; } }); const paper1 = p1Count > 0 ? p1Sum / p1Count : 0; const paper2 = p2Count > 0 ? p2Sum / p2Count : 0; const overall = (p1Count + p2Count > 0) ? (p1Sum + p2Sum) / (p1Count + p2Count) : 0; return { overall, paper1, paper2 }; }
         const calculateComposite = () => { const subjects = Object.keys(syllabusData); if(!subjects.length) return { mainAvg: 0, revAvg: 0, examAvg: 0, qbAvg: 0, composite: 0 }; const mainAvg = calculateGlobalAverage(s => calculateProgress(s, mainStudyItems)).overall; const revAvg = calculateGlobalAverage(s => calculateProgress(s, revisionItems)).overall; const examAvg = calculateGlobalAverage(s => calculateProgress(s, examItems)).overall; const qbAvg = calculateGlobalAverage(s => calculateProgress(s, qbItems)).overall; return { mainAvg, revAvg, examAvg, qbAvg, composite: (mainAvg + revAvg + examAvg + qbAvg) / 4 }; };
         const calculateGlobalAverage = (fn) => { const subjects = Object.keys(syllabusData); let total = 0; subjects.forEach(key => { total += fn(key).overall; }); return { overall: total / (subjects.length || 1) }; };
         const calculateStudyStreak = () => { const timestamps = Object.keys(state.userData).filter(k => k.startsWith('timestamp_s_')).map(k => state.userData[k]).filter(Boolean); if (timestamps.length === 0) return 0; const uniqueDays = [...new Set(timestamps.map(d => { try { const dt = new Date(d); return dt.toISOString().slice(0,10); } catch(e) { return null; } }))].filter(Boolean).sort().reverse(); const todayISO = (new Date()).toISOString().slice(0,10); let streak = 0; let cursor = new Date(todayISO); let cursorISO = todayISO; let firstDayFound = uniqueDays.includes(todayISO); if(firstDayFound) { for (const day of uniqueDays) { if (day === cursorISO) { streak++; cursor.setUTCDate(cursor.getUTCDate() - 1); cursorISO = cursor.toISOString().slice(0,10); } else if (day < cursorISO) { break; } } } return streak; };
@@ -186,49 +204,223 @@
         const createInfoButton = (data) => { const btn = document.createElement('button'); btn.className = 'info-btn'; btn.textContent = '?'; Object.entries(data).forEach(([k, v]) => { try { btn.dataset[k] = Array.isArray(v) ? JSON.stringify(v) : v; } catch(e){ console.warn(`Failed to set dataset for ${k}`, e); }}); return btn; };
         const createProgressBar = (p, color) => `<div class="w-full progress-bar-container"><div class="progress-bar pb-gradient-${color} h-2" style="width: ${p.toFixed(1)}%"></div></div>`;
         const createSingleProgressBarHTML = (value, title, color) => `<div class="border border-secondary rounded-md p-2"> <div class="text-xs flex justify-between items-center mb-1"><span>${title}</span> <strong class="font-bold">${value.toFixed(1)}%</strong></div> ${createProgressBar(value, color)}</div>`;
-        const createBreakdownProgressBar = (data, title, colors=['sky','peach','lav']) => `<div class="flex flex-col gap-2"> <div class="font-bold text-sm">${title}</div> <div class="grid grid-cols-[60px,1fr,45px] items-center gap-2 text-xs"> <span>Paper 1</span>${createProgressBar(data.paper1, colors[0])}<span class="text-right font-medium">${data.paper1.toFixed(1)}%</span> <span>Paper 2</span>${createProgressBar(data.paper2, colors[1])}<span class="text-right font-medium">${data.paper2.toFixed(1)}%</span> <span class="font-bold">Total</span>${createProgressBar(data.overall, colors[2])}<span class="text-right font-bold">${data.overall.toFixed(1)}%</span> </div></div>`;
+        const createBreakdownProgressBar = (data, title, colors=['sky','peach','lav']) => `<div class="flex flex-col gap-2"> <div class="font-bold text-sm">${title}</div> <div class="grid grid-cols-[60px,1fr,45px] items-center gap-2 text-xs"> <span>১ম পত্র</span>${createProgressBar(data.paper1, colors[0])}<span class="text-right font-medium">${data.paper1.toFixed(1)}%</span> <span>২য় পত্র</span>${createProgressBar(data.paper2, colors[1])}<span class="text-right font-medium">${data.paper2.toFixed(1)}%</span> <span class="font-bold">মোট</span>${createProgressBar(data.overall, colors[2])}<span class="text-right font-bold">${data.overall.toFixed(1)}%</span> </div></div>`;
         const createCircularProgressBar = (p, color) => `<svg class="subject-progress-svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" stroke="var(--progress-track)" stroke-width="5" fill="none" /><circle cx="32" cy="32" r="28" stroke="${color}" stroke-width="5" fill="none" stroke-dasharray="${2 * Math.PI * 28}" stroke-dashoffset="${(1 - (p/100)) * 2 * Math.PI * 28}" stroke-linecap="round" /></svg>`;
         function renderSubjectSelector() { const container = document.getElementById('subject-selector'); if(!container) return; const fragment = document.createDocumentFragment(); const colors = ['#34d399', '#f97316', '#38bdf8']; Object.keys(syllabusData).forEach((key, idx) => { const btn = document.createElement('div'); const isActive = state.activeSubject === key; const progress = calculateProgress(key, mainStudyItems); btn.className = `subject-progress-btn ${isActive ? 'active' : ''}`; btn.dataset.subject = key; btn.innerHTML = `<div class="relative">${createCircularProgressBar(progress.overall, colors[idx % colors.length])}<div class="absolute inset-0 flex items-center justify-center font-bold text-primary">${progress.overall.toFixed(0)}%</div></div><span class="font-semibold text-sm">${syllabusData[key].name}</span>`; btn.onclick = () => { if (state.activeSubject !== key) { state.activeSubject = key; renderAll(); }}; fragment.appendChild(btn); }); container.innerHTML = ''; container.appendChild(fragment); }
         function renderProgressCards() {
             const subject = state.activeSubject;
-            const mainProgEl = document.getElementById('selected-subject-main-progress'); if(mainProgEl) mainProgEl.innerHTML = createBreakdownProgressBar(calculateProgress(subject, mainStudyItems), 'Main Reading & Lectures') + createBreakdownProgressBar(calculateProgress(subject, revisionItems), 'Revision', ['rose', 'amber', 'lav']);
-            const examProgEl = document.getElementById('selected-subject-exam-progress'); if(examProgEl) examProgEl.innerHTML = createBreakdownProgressBar(calculateProgress(subject, examItems), 'All Exams', ['peach', 'cyan', 'mint']);
+            const mainProgEl = document.getElementById('selected-subject-main-progress'); if(mainProgEl) mainProgEl.innerHTML = createBreakdownProgressBar(calculateProgress(subject, mainStudyItems), 'মূল বই ও লেকচার') + createBreakdownProgressBar(calculateProgress(subject, revisionItems), 'রিভিশন', ['rose', 'amber', 'lav']);
+            const examProgEl = document.getElementById('selected-subject-exam-progress'); if(examProgEl) examProgEl.innerHTML = createBreakdownProgressBar(calculateProgress(subject, examItems), 'সকল পরীক্ষা', ['peach', 'cyan', 'mint']);
             const qbProgEl = document.getElementById('selected-subject-qb-progress'); if(qbProgEl) qbProgEl.innerHTML = createBreakdownProgressBar(calculateProgress(subject, ["MQB (Unmesh)"]), 'MQB (Unmesh)', ['amber', 'amber', 'amber']) + createBreakdownProgressBar(calculateProgress(subject, ["Retina QB"]), 'Retina QB', ['cyan', 'cyan', 'cyan']);
             const composite = calculateComposite();
             const totalEl = document.getElementById('overall-progress-container');
-            if(totalEl) { totalEl.innerHTML = `<div class="border border-secondary rounded p-2 mb-3"><div class="font-bold text-sm mb-1">Overall Progress</div><div class="grid grid-cols-[1fr,45px] items-center gap-2 text-xs">${createProgressBar(composite.composite, 'lav')}<span class="text-right font-bold">${composite.composite.toFixed(1)}%</span></div></div>`; }
-            const goalContainer = document.getElementById('goal-setting-container');
-            const currentGoal = state.userData?.studyGoal ?? 75;
-            if (goalContainer) { goalContainer.innerHTML = `<div class="text-sm font-bold mb-2">Progress vs Goal</div><div class="relative progress-bar-container h-4 mb-1"><div class="progress-bar pb-gradient-goal h-4 absolute top-0 left-0" style="width: ${currentGoal}%"></div><div class="progress-bar pb-gradient-lav h-4 absolute top-0 left-0" style="width: ${composite.composite.toFixed(1)}%"></div></div><div class="text-xs text-muted flex justify-between"><span>Current: ${composite.composite.toFixed(1)}%</span><label>Goal: <input type="number" id="goal-input" min="0" max="100" value="${currentGoal}" class="w-12 text-right bg-main border border-primary rounded px-1">%</label></div>`; }
+            if(totalEl) { totalEl.innerHTML = `<div class="border border-secondary rounded p-2 mb-3"><div class="font-bold text-sm mb-1">সার্বিক অগ্রগতি</div><div class="grid grid-cols-[1fr,45px] items-center gap-2 text-xs">${createProgressBar(composite.composite, 'lav')}<span class="text-right font-bold">${composite.composite.toFixed(1)}%</span></div></div>`; }
             const globalSummary = document.getElementById('global-summary-container');
-            if(globalSummary) { globalSummary.innerHTML = createSingleProgressBarHTML(composite.mainAvg, "Main Study", "mint") + createSingleProgressBarHTML(composite.revAvg, "Revision", "sky") + createSingleProgressBarHTML(composite.examAvg, "Exams", "peach") + createSingleProgressBarHTML(composite.qbAvg, "Question Banks", "amber"); }
+            if(globalSummary) { globalSummary.innerHTML = createSingleProgressBarHTML(composite.mainAvg, "মূল পাঠ", "mint") + createSingleProgressBarHTML(composite.revAvg, "রিভিশন", "sky") + createSingleProgressBarHTML(composite.examAvg, "পরীক্ষা", "peach") + createSingleProgressBarHTML(composite.qbAvg, "প্রশ্নব্যাংক", "amber"); }
         }
-        function renderSyllabusContent() { const container = document.getElementById('syllabus-content'); if(!container) return; const fragment = document.createDocumentFragment(); const subjectKey = state.activeSubject; const chaptersByPaper = syllabusData[subjectKey]?.chapters?.reduce((acc, chap) => { (acc[chap.paper] = acc[chap.paper] || []).push(chap); return acc; }, {}); if(!chaptersByPaper) { container.innerHTML = 'No chapters found.'; return; } const noteIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /></svg>`; const tickIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>`; Object.entries(chaptersByPaper).forEach(([paper, chapters]) => { const details = document.createElement('details'); details.dataset.paper = paper; details.open = state.syllabusOpenState[`${subjectKey}-${paper}`] !== false; const paperProgress = calculateProgress(subjectKey, mainStudyItems); const currentPaperProgress = (paper == 1) ? paperProgress.paper1 : paperProgress.paper2; details.innerHTML = `<summary class="flex justify-between items-center p-3 border border-secondary rounded-lg mb-2 cursor-pointer transition-all hover:bg-main"><div class="font-bold flex items-center">Paper ${paper} <span class="text-sm font-normal text-muted ml-2" data-paper-percent>(${currentPaperProgress.toFixed(1)}%)</span> <span class="ml-2" data-info-btn-id="paper-${paper}-info-btn"></span></div><div class="w-1/3" data-paper-progress-bar="${paper}">${createProgressBar(currentPaperProgress, paper == 1 ? 'sky' : 'peach')}</div></summary>`; const tableWrapper = document.createElement('div'); tableWrapper.className = 'overflow-x-auto'; const table = document.createElement('table'); table.innerHTML = `<thead><tr><th class="w-1/4">Chapter</th>${trackableItems.map(h => `<th class="text-center">${h}</th>`).join('')}</tr></thead>`; const tbody = document.createElement('tbody'); chapters.forEach(chapter => { const tr = document.createElement('tr'); let cells = `<td class="font-medium">${chapter.name}</td>`; trackableItems.forEach((item, i) => { const key = `s_${subjectKey}_${chapter.id}_${i}`; const status = Number(state.userData?.[key] ?? 0); const noteKey = `note_${key}`; const hasNote = !!state.userData?.[noteKey]; const fillNormalized = normalizeRawTo100(getRawPercentForStatus(status)); const isWon = Number(status) === 5; const isDone = Number(status) === 4; const statusText = isWon ? '✖' : (isDone ? tickIconSVG : `${getRawPercentForStatus(status)}%`); cells += `<td class="text-center"><button class="task-status-btn ${isWon ? 'wont' : ''} ${isDone ? 'done' : ''}" data-key="${key}" style="--fill:${fillNormalized}%"><span class="relative z-10">${statusText}</span></button><button class="note-btn ${hasNote ? 'has-note' : ''} ml-2" data-key="${noteKey}" data-title="${chapter.name} - ${item}">${noteIconSVG}</button></td>`; }); tr.innerHTML = cells; tbody.appendChild(tr); }); table.appendChild(tbody); tableWrapper.appendChild(table); details.appendChild(tableWrapper); fragment.appendChild(details); }); container.innerHTML = ''; container.appendChild(fragment); setupInfoButtons(); }
-        function renderStudyStreak() { const container = document.getElementById('streak-container'); if (!container) return; const streak = calculateStudyStreak(); if (streak > 0) { container.innerHTML = `<div class="text-sm flex items-center justify-center gap-2 border border-secondary rounded-md p-2"> <span class="text-lg">🔥</span> <span class="font-bold">You're on a ${streak}-day study streak!</span> <span class="text-lg">🔥</span> </div>`; } else { container.innerHTML = ''; } }
+        function renderSyllabusContent() { const container = document.getElementById('syllabus-content'); if(!container) return; const fragment = document.createDocumentFragment(); const subjectKey = state.activeSubject; const chaptersByPaper = syllabusData[subjectKey]?.chapters?.reduce((acc, chap) => { (acc[chap.paper] = acc[chap.paper] || []).push(chap); return acc; }, {}); if(!chaptersByPaper) { container.innerHTML = 'No chapters found.'; return; } const noteIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /></svg>`; const tickIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>`; Object.entries(chaptersByPaper).forEach(([paper, chapters]) => { const details = document.createElement('details'); details.dataset.paper = paper; details.open = state.syllabusOpenState[`${subjectKey}-${paper}`] !== false; const paperProgress = calculateProgress(subjectKey, mainStudyItems); const currentPaperProgress = (paper == 1) ? paperProgress.paper1 : paperProgress.paper2; details.innerHTML = `<summary class="flex justify-between items-center p-3 border border-secondary rounded-lg mb-2 cursor-pointer transition-all hover:bg-main"><div class="font-bold flex items-center">${paper}ম পত্র <span class="text-sm font-normal text-muted ml-2" data-paper-percent>(${currentPaperProgress.toFixed(1)}%)</span> <span class="ml-2" data-info-btn-id="paper-${paper}-info-btn"></span></div><div class="w-1/3" data-paper-progress-bar="${paper}">${createProgressBar(currentPaperProgress, paper == 1 ? 'sky' : 'peach')}</div></summary>`; const tableWrapper = document.createElement('div'); tableWrapper.className = 'overflow-x-auto'; const table = document.createElement('table'); table.innerHTML = `<thead><tr><th class="w-1/4">অধ্যায়</th>${trackableItems.map(h => `<th class="text-center">${h}</th>`).join('')}</tr></thead>`; const tbody = document.createElement('tbody'); chapters.forEach(chapter => { const tr = document.createElement('tr'); let cells = `<td class="font-medium">${chapter.name}</td>`; trackableItems.forEach((item, i) => { const key = `s_${subjectKey}_${chapter.id}_${i}`; const status = Number(state.userData?.[key] ?? 0); const noteKey = `note_${key}`; const hasNote = !!state.userData?.[noteKey]; 
+        const fillValue = (status <= 4) ? status * 20 : 100; // 80% then 100%
+        const isDone = status === 5; 
+        const isWont = status === 6; 
+        const statusText = isWont ? '✖' : (isDone ? tickIconSVG : `${status * 20}%`); 
+        cells += `<td class="text-center"><button class="task-status-btn ${isWont ? 'wont' : ''} ${isDone ? 'done' : ''}" data-key="${key}" style="--fill:${fillValue}%"><span class="relative z-10">${statusText}</span></button><button class="note-btn ${hasNote ? 'has-note' : ''} ml-2" data-key="${noteKey}" data-title="${chapter.name} - ${item}">${noteIconSVG}</button></td>`; }); tr.innerHTML = cells; tbody.appendChild(tr); }); table.appendChild(tbody); tableWrapper.appendChild(table); details.appendChild(tableWrapper); fragment.appendChild(details); }); container.innerHTML = ''; container.appendChild(fragment); setupInfoButtons(); }
+        function renderStudyStreak() { const container = document.getElementById('streak-container'); if (!container) return; const streak = calculateStudyStreak(); if (streak > 0) { container.innerHTML = `<div class="text-sm flex items-center justify-center gap-2 border border-secondary rounded-md p-2"> <span class="text-lg">🔥</span> <span class="font-bold">আপনি ${streak}-দিনের স্টাডি স্ট্রিকে আছেন!</span> <span class="text-lg">🔥</span> </div>`; } else { container.innerHTML = ''; } }
+        
+        // --- Goal Tracker ---
+        function getWeekDateRange(refDateString) {
+            const refDate = new Date(refDateString);
+            const dayOfWeek = refDate.getDay(); 
+            const first = refDate.getDate() - dayOfWeek;
+            const last = first + 6;
+
+            const sunday = new Date(refDate.setDate(first));
+            const saturday = new Date(refDate.setDate(last));
+             sunday.setHours(0,0,0,0);
+            saturday.setHours(23,59,59,999);
+
+            return {
+                start: sunday,
+                end: saturday,
+                startFormatted: sunday.toLocaleDateString('bn-BD', { day: 'numeric', month: 'long'}),
+                endFormatted: saturday.toLocaleDateString('bn-BD', { day: 'numeric', month: 'long'})
+            };
+        }
+
+        function renderGoalsCard() {
+            const container = document.getElementById('goal-tracker-card');
+            if (!container) return;
+
+            const goals = state.userData.goals || { today: [], weekly: [] };
+            const todayProgress = goals.today.length > 0 ? (goals.today.filter(g => g.completed).length / goals.today.length) * 100 : 0;
+            const weekRange = getWeekDateRange(state.currentWeeklyViewDate);
+            const weeklyGoalsForCurrentView = goals.weekly.filter(g => {
+                if (!g.dueDate) return false; 
+                const goalDate = new Date(g.dueDate);
+                return goalDate >= weekRange.start && goalDate <= weekRange.end;
+            });
+
+            const weeklyProgress = weeklyGoalsForCurrentView.length > 0 ? (weeklyGoalsForCurrentView.filter(g => g.completed).length / weeklyGoalsForCurrentView.length) * 100 : 0;
+            const consolidatedProgress = (todayProgress + weeklyProgress) / 2;
+            
+            const tickSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4" style="color: var(--bg-card);"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg>`;
+            const calendarSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c0-.414.336-.75.75-.75h10.5a.75.75 0 01.75.75v1.25c0 .414-.336.75-.75.75H5.5a.75.75 0 01-.75-.75V7.5z" clip-rule="evenodd" /></svg>`;
+
+            container.innerHTML = `
+                <h2 class="text-base font-bold mb-3 flex justify-between items-center">দৈনিক ও সাপ্তাহিক লক্ষ্য <span id="goal-info-btn"></span></h2>
+                <div class="mb-3">${createProgressBar(consolidatedProgress, 'mint')}</div>
+                <div class="flex border-b border-secondary mb-3">
+                    <button data-tab="today" class="goal-tab ${state.activeGoalTab === 'today' ? 'active' : ''}">আজকের লক্ষ্য</button>
+                    <button data-tab="weekly" class="goal-tab ${state.activeGoalTab === 'weekly' ? 'active' : ''}">সাপ্তাহিক লক্ষ্য</button>
+                    <button data-tab="history" class="goal-tab ${state.activeGoalTab === 'history' ? 'active' : ''}">বিগত সপ্তাহ</button>
+                </div>
+                
+                <div id="goal-tab-content"></div>
+            `;
+            
+            const contentContainer = container.querySelector('#goal-tab-content');
+            
+            if (state.activeGoalTab === 'history') {
+                 const allGoals = [...(goals.today || []), ...(goals.weekly || [])];
+                const uniqueGoals = Array.from(new Map(allGoals.map(item => [item.id, item])).values());
+
+                let historyGoals;
+                if (state.historyViewState.mode === 'specificDate' && state.historyViewState.selectedDate) {
+                    historyGoals = uniqueGoals.filter(g => {
+                        return g.completed && g.completedAt && g.completedAt.startsWith(state.historyViewState.selectedDate);
+                    });
+                } else { // last7days
+                    historyGoals = uniqueGoals.filter(g => {
+                        if (!g.completed || !g.completedAt) return false;
+                        const completedDate = new Date(g.completedAt);
+                        const sevenDaysAgo = new Date();
+                        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                        sevenDaysAgo.setHours(0,0,0,0);
+                        return completedDate >= sevenDaysAgo;
+                    });
+                }
+
+                contentContainer.innerHTML = `
+                    <div class="flex items-center justify-between gap-2 mb-3 text-xs">
+                       <div class="flex items-center gap-2">
+                         <input type="date" id="history-date-picker" class="goal-add-input w-auto" value="${state.historyViewState.selectedDate || ''}">
+                         <button id="view-specific-date-btn" class="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded-md">দেখুন</button>
+                       </div>
+                       <button id="view-last-7-days-btn" class="px-2 py-1 ${state.historyViewState.mode === 'last7days' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'} rounded-md">গত ৭ দিন</button>
+                    </div>
+                ` + (historyGoals.length === 0 
+                    ? `<p class="text-center text-muted text-sm py-4">এই তারিখে কোনো লক্ষ্য সম্পন্ন হয়নি।</p>`
+                    : `<ul class="space-y-2 mb-4">${historyGoals.map(goal => `
+                        <li class="goal-list-item completed">
+                            <span class="goal-tick-btn">${tickSVG}</span>
+                            <span class="goal-title">${goal.title}</span>
+                             <span class="text-xs text-muted">${new Date(goal.completedAt).toLocaleDateString('bn-BD')}</span>
+                        </li>`).join('')}</ul>`);
+            } else {
+                const goalsToShow = state.activeGoalTab === 'today' ? goals.today : weeklyGoalsForCurrentView;
+                const progressToShow = state.activeGoalTab === 'today' ? todayProgress : weeklyProgress;
+                
+                let tabHeader = '';
+                if(state.activeGoalTab === 'weekly') {
+                     tabHeader = `<div class="text-xs text-center text-muted mb-2 font-semibold flex justify-center items-center gap-2">
+                        <span>${weekRange.startFormatted} - ${weekRange.endFormatted}</span>
+                        <label id="week-selector-label" class="cursor-pointer">${calendarSVG}</label>
+                        <input type="date" id="week-selector-input" class="hidden absolute">
+                    </div>`;
+                }
+
+                contentContainer.innerHTML = `
+                    ${tabHeader}
+                    <div class="mb-3">
+                        <div class="text-xs flex justify-between items-center mb-1"><span>${state.activeGoalTab === 'today' ? 'আজকের' : 'সাপ্তাহিক'} অগ্রগতি</span> <strong>${progressToShow.toFixed(0)}%</strong></div>
+                        ${createProgressBar(progressToShow, 'sky')}
+                    </div>
+                    <ul id="goal-list" class="space-y-2 mb-4">
+                        ${goalsToShow.length === 0 ? `<p class="text-center text-muted text-sm py-4">কোনো লক্ষ্য যোগ করা হয়নি।</p>` : ''}
+                        ${goalsToShow.map(goal => `
+                            <li class="goal-list-item ${goal.completed ? 'completed' : ''}" data-goal-id="${goal.id}">
+                                <button class="goal-tick-btn">${goal.completed ? tickSVG : ''}</button>
+                                <span class="goal-title">${goal.title}</span>
+                                <div class="relative">
+                                     <button class="goal-action-btn goal-date-btn">${calendarSVG}</button>
+                                     <input type="date" class="goal-date-editor hidden absolute right-0 top-0" value="${goal.dueDate || ''}">
+                                </div>
+                                <button class="goal-action-btn goal-delete-btn" data-goal-id="${goal.id}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.58.22-2.365.468a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clip-rule="evenodd" /></svg>
+                                </button>
+                            </li>`).join('')}
+                    </ul>
+                    <form id="goal-add-form" class="flex items-center gap-2">
+                        <input type="text" class="goal-add-input flex-grow" placeholder="নতুন লক্ষ্য লিখুন...">
+                        <input type="date" id="goal-due-date" class="goal-add-input w-auto">
+                        <button type="submit" class="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm">যোগ</button>
+                    </form>
+                `;
+            }
+        }
+
         function setupInfoButtons() {
             const attach = (selector, data) => { try { const el = document.querySelector(selector); if(el) { el.innerHTML = ''; el.append(createInfoButton(data)); }} catch(e){ console.warn(`Failed attaching info btn to ${selector}`, e)} };
-            attach('#subject-choice-info-btn', {modalTitle: "Subject Choice", modalDesc: "Progress shown here is an average of Main Reading, Class Lectures, and Meditrics.", modalItems: mainStudyItems});
-            attach('#main-progress-info-btn', {modalTitle: "Main Progress Calculation", modalDesc: "An average of main reading and class lectures. For Biology & Chemistry, it takes the max of 'Main Book' and 'Meditrics'. Physics excludes 'Main Book'.", modalItems: mainStudyItems.concat(revisionItems)});
-            attach('#exam-progress-info-btn', {modalTitle: "Exam Progress Calculation", modalDesc: "An average of all exam types.", modalItems: examItems});
-            attach('#qb-progress-info-btn', {modalTitle: "Question Bank Calculation", modalDesc: "An average of all question bank completion.", modalItems: qbItems});
-            attach('#global-summary-info-btn', {modalTitle: "Global Summary & Composite", modalDesc: "Overall Progress (Composite): Average of the four main categories across all subjects. Global Summaries: Average of each category across all subjects.", modalItems: ["Overall Progress", "Global Main Study", "Global Revision", "Global Exams", "Global Question Banks"]});
-            attach('[data-info-btn-id="paper-1-info-btn"]', {modalTitle: "Paper 1 Progress", modalDesc: "Shows main progress for Paper 1 chapters of the selected subject.", modalItems: mainStudyItems});
-            attach('[data-info-btn-id="paper-2-info-btn"]', {modalTitle: "Paper 2 Progress", modalDesc: "Shows main progress for Paper 2 chapters of the selected subject.", modalItems: mainStudyItems});
+            attach('#subject-choice-info-btn', {modalTitle: "বিষয় নির্বাচন", modalDesc: "এখানে প্রতিটি বিষয়ের মূল পাঠের গড় অগ্রগতি দেখানো হয়েছে।", modalItems: mainStudyItems});
+            attach('#main-progress-info-btn', {modalTitle: "মূল অগ্রগতি গণনা", modalDesc: "মূল বই ও ক্লাস লেকচারের গড় অগ্রগতি। বায়োলজি ও কেমিস্ট্রির জন্য মূল বই ও মেডিট্রিক্স এর মধ্যে সর্বোচ্চটি এবং ফিজিক্সে মূল বই বাদ দিয়ে গণনা করা হয়।", modalItems: mainStudyItems.concat(revisionItems)});
+            attach('#exam-progress-info-btn', {modalTitle: "পরীক্ষার অগ্রগতি গণনা", modalDesc: "সকল ধরণের পরীক্ষার গড় অগ্রগতি।", modalItems: examItems});
+            attach('#qb-progress-info-btn', {modalTitle: "প্রশ্নব্যাংক গণনা", modalDesc: "সকল প্রশ্নব্যাংক সমাধানের গড় অগ্রগতি।", modalItems: qbItems});
+            attach('#global-summary-info-btn', {modalTitle: "সার্বিক সারাংশ ও Composite", modalDesc: "সার্বিক অগ্রগতি (Composite): সকল বিষয়ের Main Study, Revision, Exams, এবং QB - এই চারটি বিভাগের সার্বিক অগ্রগতির গড়।", modalItems: ["Overall Progress", "Global Main Study", "Global Revision", "Global Exams", "Global Question Banks"]});
+            attach('[data-info-btn-id="paper-1-info-btn"]', {modalTitle: "১ম পত্র অগ্রগতি", modalDesc: "নির্বাচিত বিষয়ের শুধুমাত্র ১ম পত্রের অধ্যায়গুলোর মূল অগ্রগতি দেখানো হয়েছে।", modalItems: mainStudyItems});
+            attach('[data-info-btn-id="paper-2-info-btn"]', {modalTitle: "২য় পত্র অগ্রগতি", modalDesc: "নির্বাচিত বিষয়ের শুধুমাত্র ২য় পত্রের অধ্যায়গুলোর মূল অগ্রগতি দেখানো হয়েছে।", modalItems: mainStudyItems});
             attach('#countdown-info-btn', { modalTitle: "Countdown Target", modalDesc: `Counting down to: ${TARGET_DATE_STRING}`, modalItems: [] });
+            attach('#goal-info-btn', { modalTitle: "দৈনিক ও সাপ্তাহিক লক্ষ্য", modalDesc: "আপনার দৈনন্দিন এবং সাপ্তাহিক লক্ষ্যগুলো এখানে ট্র্যাক করুন। সম্পন্ন করা লক্ষ্যগুলো 'বিগত সপ্তাহ' ট্যাবে পর্যালোচনার জন্য দেখানো হয়।", modalItems: ["ইনপুট ফিল্ড ব্যবহার করে নতুন লক্ষ্য যোগ করুন।", "লক্ষ্য সম্পন্ন করতে বৃত্তে ক্লিক করুন।", "ভুল হলে undo করার সুযোগ রয়েছে।", "ট্র্যাশ আইকন ব্যবহার করে লক্ষ্য মুছে ফেলুন।"] });
         }
 
         // --- State Update & Sync Logic ---
         let updateTimeout; let noteModalOverlay, noteModalTitle, noteTextarea, syncModalOverlay;
         const debouncedUpdate = (key, value) => { clearTimeout(updateTimeout); updateTimeout = setTimeout(() => { updateState(key, value); checkMilestones(); }, 150); };
-        async function updateState(key, value) {
-            const dataKey = key.startsWith('userData.') ? key.substring(9) : null; if (!dataKey) return;
-            state.userData[dataKey] = value;
-            const writesToQueue = [{ key: dataKey, value: value }];
-            if (dataKey.startsWith('s_')) { const timestampKey = `timestamp_${dataKey}`; state.userData[timestampKey] = new Date().toISOString(); writesToQueue.push({ key: timestampKey, value: state.userData[timestampKey] }); }
-            try { for (const item of writesToQueue) { await writeToDB('pendingWrites', item); } await writeToDB('userData', { id: 'main', value: state.userData }); document.getElementById('connection-status').textContent = 'Saved locally'; rerenderProgressBarsOnly(); await updateSyncQueueCount(); syncPendingWrites(); } catch (e) { console.error("DB write failed:", e); if (e.message === 'QuotaExceededError') { showToast('❌ Local storage is full!', 'error'); } else { showToast('❌ Local save failed!', 'error'); } }
+        async function updateState(key, value, debounce = false) {
+            // Simplified for goals
+            if (key === 'userData.goals') {
+                state.userData.goals = value;
+            } else {
+                const dataKey = key.startsWith('userData.') ? key.substring(9) : null; 
+                if (!dataKey) return;
+                state.userData[dataKey] = value;
+            }
+
+            const updateAction = async () => {
+                const writesToQueue = [];
+                if (key === 'userData.goals') {
+                    writesToQueue.push({ key: 'goals', value: value });
+                } else {
+                    const dataKey = key.substring(9);
+                    writesToQueue.push({ key: dataKey, value: value });
+                     if (dataKey.startsWith('s_')) { 
+                        const timestampKey = `timestamp_${dataKey}`; 
+                        state.userData[timestampKey] = new Date().toISOString(); 
+                        writesToQueue.push({ key: timestampKey, value: state.userData[timestampKey] }); 
+                    }
+                }
+
+                try { 
+                    for (const item of writesToQueue) { await writeToDB('pendingWrites', item); } 
+                    await writeToDB('userData', { id: 'main', value: state.userData }); 
+                    document.getElementById('connection-status').textContent = 'Saved locally'; 
+                    rerenderProgressBarsOnly(); 
+                    await updateSyncQueueCount(); 
+                    syncPendingWrites(); 
+                } catch (e) { 
+                    console.error("DB write failed:", e); 
+                    if (e.message === 'QuotaExceededError') { showToast('❌ Local storage is full!', 'error'); } 
+                    else { showToast('❌ Local save failed!', 'error'); } 
+                }
+            };
+
+            if (debounce) {
+                clearTimeout(updateTimeout);
+                updateTimeout = setTimeout(updateAction, 250);
+            } else {
+                await updateAction();
+            }
         }
 
-        function rerenderProgressBarsOnly() { try { renderSubjectSelector(); renderProgressCards(); renderStudyStreak(); const subjectKey = state.activeSubject; const paperProgress = calculateProgress(subjectKey, mainStudyItems); updatePaperSummaryProgress(1, paperProgress.paper1); updatePaperSummaryProgress(2, paperProgress.paper2); updateSyncQueueCount(); } catch (e) { console.error("Error updating visuals:", e); renderAll(); } }
+        function rerenderProgressBarsOnly() { try { renderSubjectSelector(); renderProgressCards(); renderStudyStreak(); renderGoalsCard(); const subjectKey = state.activeSubject; const paperProgress = calculateProgress(subjectKey, mainStudyItems); updatePaperSummaryProgress(1, paperProgress.paper1); updatePaperSummaryProgress(2, paperProgress.paper2); updateSyncQueueCount(); } catch (e) { console.error("Error updating visuals:", e); renderAll(); } }
         function updatePaperSummaryProgress(paperNum, progressValue) { const summaryEl = document.querySelector(`details[data-paper="${paperNum}"] > summary`); if (summaryEl) { const progressDiv = summaryEl.querySelector(`[data-paper-progress-bar="${paperNum}"]`); const percentSpan = summaryEl.querySelector('[data-paper-percent]'); const color = paperNum === 1 ? 'sky' : 'peach'; if (progressDiv) progressDiv.innerHTML = createProgressBar(progressValue, color); if (percentSpan) percentSpan.textContent = `(${progressValue.toFixed(1)}%)`; } }
         async function syncPendingWrites() {
             const syncStatusEl = document.getElementById('connection-status'); if (!db || !userDocRef) { syncStatusEl.textContent = 'Firebase Error'; syncStatusEl.className = 'status-indicator offline'; return; }
@@ -238,12 +430,41 @@
             syncStatusEl.textContent = `Syncing...`;
             try { const updates = {}; pending.forEach(item => { updates[item.key] = item.value }); await setDoc(userDocRef, updates, { merge: true }); await clearDBStore('pendingWrites'); const now = new Date().toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }); await writeToDB('userData', { id: 'setting_lastSynced', value: now }); syncStatusEl.textContent = `Synced: ${now}`; syncStatusEl.className = 'status-indicator online'; showToast('✅ Sync Successful!', 'success'); await updateSyncQueueCount(0); } catch (error) { console.error("Sync error: ", error); syncStatusEl.textContent = 'Sync Failed'; syncStatusEl.className = 'status-indicator offline'; if (error.message === 'QuotaExceededError') { showToast('❌ Sync Failed: Storage full!', 'error'); } else { showToast(`❌ Sync Failed! ${error.code || error.message}`, 'error'); } }
         }
-        function checkMilestones() { const newCompositeProgress = calculateComposite().composite; const milestones = [50, 75, 100]; milestones.forEach(ms => { if (state.lastCompositeProgress < ms && newCompositeProgress >= ms) { showToast(`🎉 Milestone Reached: ${ms}% Overall Progress! Keep it up!`, 'success'); } }); state.lastCompositeProgress = newCompositeProgress; }
+        function checkMilestones() { const newCompositeProgress = calculateComposite().composite; const milestones = [50, 75, 100]; milestones.forEach(ms => { if (state.lastCompositeProgress < ms && newCompositeProgress >= ms) { showToast(`🎉মাইলফলক অর্জিত: ${ms}% সামগ্রিক অগ্রগতি!`, 'success'); } }); state.lastCompositeProgress = newCompositeProgress; }
 
         // --- Utility Functions ---
-        function showToast(message, type = 'success') { const t = document.createElement('div'); t.className = `px-4 py-2 rounded-lg shadow-lg ${type === 'error' ? 'bg-red-600' : 'bg-green-600'} text-white transition-all duration-300 transform opacity-0 translate-y-5`; t.textContent = message; (document.getElementById('toast-container') || document.body).appendChild(t); setTimeout(() => t.classList.remove('opacity-0', 'translate-y-5'), 50); setTimeout(() => { t.classList.add('opacity-0', 'translate-y-5'); t.addEventListener('transitionend', () => t.remove()); }, 4000); }
+        function showToast(message, type = 'success', options = {}) { 
+            const container = document.getElementById('toast-container');
+            const t = document.createElement('div'); 
+            t.className = `px-4 py-2 rounded-lg shadow-lg ${type === 'error' ? 'bg-red-600' : 'bg-green-600'} text-white transition-all duration-300 transform opacity-0 translate-y-5 flex items-center gap-4`; 
+            
+            const messageSpan = document.createElement('span');
+            messageSpan.textContent = message;
+            t.appendChild(messageSpan);
+            
+            if (options.actionText && options.action) {
+                const actionBtn = document.createElement('button');
+                actionBtn.textContent = options.actionText;
+                actionBtn.className = 'font-bold underline';
+                actionBtn.onclick = () => {
+                    options.action();
+                    t.remove();
+                };
+                t.appendChild(actionBtn);
+            }
+
+            container.appendChild(t); 
+            setTimeout(() => t.classList.remove('opacity-0', 'translate-y-5'), 50); 
+            
+            if (!options.action) { // Auto-dismiss if no action
+                setTimeout(() => { 
+                    t.classList.add('opacity-0', 'translate-y-5'); 
+                    t.addEventListener('transitionend', () => t.remove()); 
+                }, options.duration || 4000); 
+            }
+        }
         let currentNoteKey = null; let initialNoteValue = '';
-        function openNoteModal(key, title) { currentNoteKey = key; initialNoteValue = state.userData?.[key] ?? ''; if(noteModalTitle) noteModalTitle.textContent = `Note for: ${title}`; if(noteTextarea) noteTextarea.value = initialNoteValue; noteModalOverlay?.classList.add('visible'); }
+        function openNoteModal(key, title) { currentNoteKey = key; initialNoteValue = state.userData?.[key] ?? ''; if(noteModalTitle) noteModalTitle.textContent = `নোট: ${title}`; if(noteTextarea) noteTextarea.value = initialNoteValue; noteModalOverlay?.classList.add('visible'); }
         function closeNoteModal() { noteModalOverlay?.classList.remove('visible'); currentNoteKey = null; initialNoteValue = ''; }
         function setupModalEventHandlers() {
             document.getElementById('note-modal-save')?.addEventListener('click', () => { if (currentNoteKey) { const newValue = noteTextarea.value; updateState(`userData.${currentNoteKey}`, newValue); const btn = document.querySelector(`.note-btn[data-key="${currentNoteKey}"]`); if(btn) btn.classList.toggle('has-note', !!newValue); } closeNoteModal(); });
@@ -259,41 +480,187 @@
         }
         function openSyncQueueModal() { renderSyncQueuePanel(); syncModalOverlay?.classList.add('visible'); }
         function closeSyncQueueModal() { syncModalOverlay?.classList.remove('visible'); }
-        function translateSyncKey(key) { if (key === 'studyGoal') return 'Study Goal'; if (key.startsWith('note_')) { const parts = key.replace('note_s_', '').split('_'); const subject = syllabusData[parts[0]]?.name || parts[0]; const chapter = syllabusData[parts[0]]?.chapters?.find(c => c.id == parts[1])?.name || `Ch ${parts[1]}`; const item = trackableItems[parts[2]] || `Item ${parts[2]}`; return `Note: ${subject} - ${chapter} - ${item}`; } if (key.startsWith('s_')) { const parts = key.replace('s_', '').split('_'); const subject = syllabusData[parts[0]]?.name || parts[0]; const chapter = syllabusData[parts[0]]?.chapters?.find(c => c.id == parts[1])?.name || `Ch ${parts[1]}`; const item = trackableItems[parts[2]] || `Item ${parts[2]}`; return `Update: ${subject} - ${chapter} - ${item}`; } if (key.startsWith('timestamp_')) return `Timestamp for ${translateSyncKey(key.replace('timestamp_', ''))}`; return key; }
+        function translateSyncKey(key) { if (key === 'studyGoal') return 'Study Goal'; if (key === 'goals') return 'Daily/Weekly Goals'; if (key.startsWith('note_')) { const parts = key.replace('note_s_', '').split('_'); const subject = syllabusData[parts[0]]?.name || parts[0]; const chapter = syllabusData[parts[0]]?.chapters?.find(c => c.id == parts[1])?.name || `Ch ${parts[1]}`; const item = trackableItems[parts[2]] || `Item ${parts[2]}`; return `Note: ${subject} - ${chapter} - ${item}`; } if (key.startsWith('s_')) { const parts = key.replace('s_', '').split('_'); const subject = syllabusData[parts[0]]?.name || parts[0]; const chapter = syllabusData[parts[0]]?.chapters?.find(c => c.id == parts[1])?.name || `Ch ${parts[1]}`; const item = trackableItems[parts[2]] || `Item ${parts[2]}`; return `Update: ${subject} - ${chapter} - ${item}`; } if (key.startsWith('timestamp_')) return `Timestamp for ${translateSyncKey(key.replace('timestamp_', ''))}`; return key; }
         async function renderSyncQueuePanel() { const listEl = document.getElementById('sync-queue-list'); const countEl = document.getElementById('sync-modal-count'); if (!listEl || !countEl) return; const pending = await getAllFromDB('pendingWrites'); countEl.textContent = pending.length; if (pending.length === 0) { listEl.innerHTML = '<li>No pending changes.</li>'; return; } listEl.innerHTML = ''; pending.forEach(item => { const li = document.createElement('li'); li.textContent = translateSyncKey(item.key); listEl.appendChild(li); }); }
         async function updateSyncQueueCount(count = null) { const badge = document.getElementById('sync-queue-count'); if (!badge) return; try { const currentCount = count ?? (await getAllFromDB('pendingWrites')).length; badge.textContent = currentCount; badge.style.display = currentCount > 0 ? 'flex' : 'none'; } catch(e){ console.error("Failed to update sync count", e); }}
 
         function setupEventHandlers() {
             const infoModalOverlay = document.getElementById('info-modal-overlay');
             const tickIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>`;
+            
             document.body.addEventListener('click', e => {
-                const targetBtn = e.target.closest('button'); if (!targetBtn) return;
-                if (targetBtn.id === 'export-csv-btn') { exportDataToCSV(); return; }
-                if (targetBtn.id === 'export-json-btn') { exportDataToJSON(); return; }
-                if (targetBtn.classList.contains('info-btn')) { 
-                    const itemsList = document.getElementById('info-modal-items');
-                    const itemsStr = targetBtn.dataset.modalItems;
-                    document.getElementById('info-modal-title').textContent = targetBtn.dataset.modalTitle;
-                    document.getElementById('info-modal-desc').textContent = targetBtn.dataset.modalDesc;
-                    if(itemsList) itemsList.innerHTML = '';
-                    if (itemsList && itemsStr && (itemsStr.trim().startsWith('[') || itemsStr.trim().startsWith('{'))) {
-                      try { JSON.parse(itemsStr).forEach(item => { const li = document.createElement('li'); li.textContent = item; itemsList.appendChild(li); });
-                      } catch(err) { console.warn("Error parsing modalItems JSON:", err) }
+                const target = e.target;
+                const targetBtn = target.closest('button');
+
+                if (targetBtn) {
+                    // --- Main Dashboard Actions ---
+                    if (targetBtn.id === 'export-csv-btn') { exportDataToCSV(); return; }
+                    if (targetBtn.id === 'export-json-btn') { exportDataToJSON(); return; }
+                    if (targetBtn.classList.contains('info-btn')) { 
+                        const itemsList = document.getElementById('info-modal-items');
+                        const itemsStr = targetBtn.dataset.modalItems;
+                        document.getElementById('info-modal-title').textContent = targetBtn.dataset.modalTitle;
+                        document.getElementById('info-modal-desc').textContent = targetBtn.dataset.modalDesc;
+                        if(itemsList) itemsList.innerHTML = '';
+                        if (itemsList && itemsStr && (itemsStr.trim().startsWith('[') || itemsStr.trim().startsWith('{'))) {
+                          try { JSON.parse(itemsStr).forEach(item => { const li = document.createElement('li'); li.textContent = item; itemsList.appendChild(li); });
+                          } catch(err) { console.warn("Error parsing modalItems JSON:", err) }
+                        }
+                        if(infoModalOverlay) infoModalOverlay.classList.add('visible'); return; 
                     }
-                    if(infoModalOverlay) infoModalOverlay.classList.add('visible'); return; 
+                    if (targetBtn.classList.contains('task-status-btn')) { 
+                        const key = targetBtn.dataset.key; 
+                        const currentStatus = Number(state.userData?.[key] ?? 0); 
+                        const newStatus = (currentStatus + 1) % 7; // Logic Fix: 7 states (0-6)
+                        const fillValue = (newStatus <= 4) ? newStatus * 20 : 100;
+                        const isDone = newStatus === 5; 
+                        const isWont = newStatus === 6; 
+                        const statusText = isWont ? '✖' : (isDone ? tickIconSVG : `${newStatus * 20}%`); 
+
+                        targetBtn.style.setProperty('--fill', `${fillValue}%`);
+                        targetBtn.classList.toggle('wont', isWont);
+                        targetBtn.classList.toggle('done', isDone);
+                        const iconSpan = targetBtn.querySelector('span'); 
+                        if (iconSpan) { iconSpan.innerHTML = statusText; } 
+                        updateState(`userData.${key}`, newStatus); 
+                        return;
+                    }
+                    if (targetBtn.classList.contains('note-btn')) { openNoteModal(targetBtn.dataset.key, targetBtn.dataset.title); return; }
                 }
-                if (targetBtn.classList.contains('task-status-btn')) { const key = targetBtn.dataset.key; const currentStatus = Number(state.userData?.[key] ?? 0); const newStatus = (currentStatus + 1) % 6; const fill = normalizeRawTo100(getRawPercentForStatus(newStatus)); targetBtn.style.setProperty('--fill', `${fill}%`); targetBtn.classList.toggle('wont', newStatus === 5); targetBtn.classList.toggle('done', newStatus === 4); const iconSpan = targetBtn.querySelector('span'); const statusText = newStatus === 5 ? '✖' : (newStatus === 4 ? tickIconSVG : `${getRawPercentForStatus(newStatus)}%`); if (iconSpan) { iconSpan.innerHTML = statusText; } debouncedUpdate(`userData.${key}`, newStatus); return; }
-                if (targetBtn.classList.contains('note-btn')) { openNoteModal(targetBtn.dataset.key, targetBtn.dataset.title); return; }
+
+                // --- Goal Tracker Actions (Event Delegation) ---
+                const goalCard = target.closest('#goal-tracker-card');
+                if (goalCard) {
+                    const tabBtn = target.closest('.goal-tab');
+                    if (tabBtn) { state.activeGoalTab = tabBtn.dataset.tab; if(tabBtn.dataset.tab !== 'weekly') state.currentWeeklyViewDate = new Date().toISOString(); renderGoalsCard(); return; }
+
+                    const tickBtn = target.closest('.goal-tick-btn');
+                    if (tickBtn) { const goalId = tickBtn.closest('.goal-list-item').dataset.goalId; toggleGoal(goalId); return; }
+
+                    const deleteBtn = target.closest('.goal-delete-btn');
+                    if (deleteBtn) { const goalId = deleteBtn.closest('.goal-list-item').dataset.goalId; deleteGoal(goalId); return; }
+
+                    if(target.id === 'view-specific-date-btn') { const datePicker = document.getElementById('history-date-picker'); if (datePicker && datePicker.value) { state.historyViewState.mode = 'specificDate'; state.historyViewState.selectedDate = datePicker.value; renderGoalsCard(); } }
+                    if(target.id === 'view-last-7-days-btn') { state.historyViewState.mode = 'last7days'; state.historyViewState.selectedDate = null; renderGoalsCard(); }
+
+                    if(target.closest('#week-selector-label')) {
+                        const dateInput = document.getElementById('week-selector-input');
+                        if(dateInput) dateInput.click();
+                    }
+                }
             });
-            document.getElementById('app-container').addEventListener('change', e => { if (e.target.id === 'goal-input') { const currentGoal = state.userData?.studyGoal ?? 75; const newGoal = Math.max(0, Math.min(100, parseInt(e.target.value, 10) || 0)); if (newGoal !== currentGoal) { updateState('userData.studyGoal', newGoal); } e.target.value = newGoal; } });
+            
+             document.body.addEventListener('change', e => {
+                const target = e.target;
+                 if (target.classList.contains('goal-date-editor')) {
+                    const goalId = target.closest('.goal-list-item').dataset.goalId;
+                    updateGoalDate(goalId, target.value);
+                    target.classList.add('hidden');
+                }
+                if (target.id === 'week-selector-input') {
+                    state.currentWeeklyViewDate = new Date(target.value).toISOString();
+                    renderGoalsCard();
+                }
+            });
+
+            document.body.addEventListener('submit', e => {
+                 if (e.target.id === 'goal-add-form') {
+                    e.preventDefault();
+                    const input = e.target.querySelector('input[type="text"]');
+                    const dateInput = e.target.querySelector('input[type="date"]');
+                    if (input && input.value.trim()) {
+                        addGoal(input.value.trim(), dateInput.value);
+                        input.value = '';
+                        dateInput.value = '';
+                    }
+                }
+            });
+
             const closeInfoModal = () => infoModalOverlay.classList.remove('visible');
             infoModalOverlay.addEventListener('click', e => { if (e.target === infoModalOverlay) closeInfoModal(); });
             document.getElementById('info-modal-close')?.addEventListener('click', closeInfoModal);
+            
             const syllabusContent = document.getElementById('syllabus-content');
             if (syllabusContent) { syllabusContent.addEventListener('toggle', (e) => { if (e.target.tagName === 'DETAILS') { const paper = e.target.dataset.paper; if(paper) state.syllabusOpenState[`${state.activeSubject}-${paper}`] = e.target.open; } }, true); }
         }
+        
+        function addGoal(title, dueDate) {
+            const newGoal = { id: `g_${Date.now()}`, title, completed: false, createdAt: new Date().toISOString(), dueDate: dueDate || null };
+            const currentGoals = state.userData.goals || { today: [], weekly: [] };
+            const todayISO = new Date().toISOString().slice(0, 10);
+
+            if (state.activeGoalTab === 'today') {
+                currentGoals.today.push(newGoal);
+                if (!currentGoals.weekly.find(g => g.id === newGoal.id)) { currentGoals.weekly.push(newGoal); }
+            } else if (state.activeGoalTab === 'weekly') {
+                currentGoals.weekly.push(newGoal);
+                if (dueDate === todayISO && !currentGoals.today.find(g => g.id === newGoal.id)) { currentGoals.today.push(newGoal); }
+            }
+            updateState('userData.goals', currentGoals);
+        }
+
+        let undoTimeout;
+        function toggleGoal(goalId) {
+            const currentGoals = JSON.parse(JSON.stringify(state.userData.goals || { today: [], weekly: [] }));
+            let goalToday = currentGoals.today.find(g => g.id === goalId);
+            let goalWeekly = currentGoals.weekly.find(g => g.id === goalId);
+            if (!goalToday && !goalWeekly) return;
+            const wasCompleted = goalToday ? goalToday.completed : goalWeekly.completed;
+            const newCompletedState = !wasCompleted;
+            const completedAt = newCompletedState ? new Date().toISOString() : null;
+            if(goalToday) { goalToday.completed = newCompletedState; goalToday.completedAt = completedAt; }
+            if(goalWeekly) { goalWeekly.completed = newCompletedState; goalWeekly.completedAt = completedAt; }
+            updateState('userData.goals', currentGoals);
+
+            if (wasCompleted) { 
+                clearTimeout(undoTimeout);
+                const undoAction = () => {
+                    const freshGoals = JSON.parse(JSON.stringify(state.userData.goals || { today: [], weekly: [] }));
+                    let goalToRevertToday = freshGoals.today.find(g => g.id === goalId);
+                    let goalToRevertWeekly = freshGoals.weekly.find(g => g.id === goalId);
+                    if (goalToRevertToday) { goalToRevertToday.completed = true; goalToRevertToday.completedAt = completedAt; }
+                    if (goalToRevertWeekly) { goalToRevertWeekly.completed = true; goalToRevertWeekly.completedAt = completedAt; }
+                    updateState('userData.goals', freshGoals);
+                };
+                showToast("সম্পন্ন তালিকা থেকে সরানো হয়েছে।", 'success', { actionText: "পুনরুদ্ধার", action: undoAction, duration: 5000 });
+            }
+        }
+
+        function deleteGoal(goalId) {
+             const currentGoals = JSON.parse(JSON.stringify(state.userData.goals || { today: [], weekly: [] }));
+             currentGoals.today = currentGoals.today.filter(g => g.id !== goalId);
+             currentGoals.weekly = currentGoals.weekly.filter(g => g.id !== goalId);
+             updateState('userData.goals', currentGoals);
+        }
+
+        function updateGoalDate(goalId, newDueDate) {
+            const currentGoals = JSON.parse(JSON.stringify(state.userData.goals || { today: [], weekly: [] }));
+            let goalToday = currentGoals.today.find(g => g.id === goalId);
+            let goalWeekly = currentGoals.weekly.find(g => g.id === goalId);
+            const todayISO = new Date().toISOString().slice(0, 10);
+            
+            // Update date in weekly list first
+            if (goalWeekly) {
+                goalWeekly.dueDate = newDueDate;
+            }
+
+            // Sync with today list
+            const isInTodayList = !!goalToday;
+            const shouldBeInTodayList = newDueDate === todayISO;
+
+            if (shouldBeInTodayList && !isInTodayList) {
+                // To avoid duplicates, we need to make sure we're adding the reference from weekly
+                const goalRef = currentGoals.weekly.find(g => g.id === goalId);
+                if(goalRef) currentGoals.today.push(goalRef);
+            } else if (!shouldBeInTodayList && isInTodayList) {
+                currentGoals.today = currentGoals.today.filter(g => g.id !== goalId);
+            }
+
+            updateState('userData.goals', currentGoals);
+        }
+
         let countdownInterval;
-        function startCountdown() { if(countdownInterval) clearInterval(countdownInterval); const target = new Date(`${TARGET_DATE_STRING}T00:00:00+06:00`); const countdownEl = document.getElementById('countdown'); if(!countdownEl) return; const tick = () => { try { const diff = Math.max(0, target - new Date()); const d = Math.floor(diff / 864e5), h = Math.floor((diff % 864e5) / 36e5), m = Math.floor((diff % 36e5) / 6e4), s = Math.floor((diff % 6e4) / 1e3); countdownEl.innerHTML = `<div class="text-center"><div class="countdown-num">${d}</div><div class="countdown-label">Days</div></div><div class="text-center"><div class="countdown-num">${String(h).padStart(2,'0')}</div><div class="countdown-label">Hours</div></div><div class="text-center"><div class="countdown-num">${String(m).padStart(2,'0')}</div><div class="countdown-label">Mins</div></div><div class="text-center"><div class="countdown-num">${String(s).padStart(2,'0')}</div><div class="countdown-label">Secs</div></div>`; } catch(e){ console.error("Countdown tick error:", e); clearInterval(countdownInterval)} }; try { tick(); countdownInterval = setInterval(tick, 1000); } catch(e){ console.error("Countdown setup error:", e) } }
+        function startCountdown() { if(countdownInterval) clearInterval(countdownInterval); const target = new Date(`${TARGET_DATE_STRING}T00:00:00+06:00`); const countdownEl = document.getElementById('countdown'); if(!countdownEl) return; const tick = () => { try { const diff = Math.max(0, target - new Date()); const d = Math.floor(diff / 864e5), h = Math.floor((diff % 864e5) / 36e5), m = Math.floor((diff % 36e5) / 6e4), s = Math.floor((diff % 6e4) / 1e3); countdownEl.innerHTML = `<div class="text-center"><div class="countdown-num">${d}</div><div class="countdown-label">দিন</div></div><div class="text-center"><div class="countdown-num">${String(h).padStart(2,'0')}</div><div class="countdown-label">ঘণ্টা</div></div><div class="text-center"><div class="countdown-num">${String(m).padStart(2,'0')}</div><div class="countdown-label">মিনিট</div></div><div class="text-center"><div class="countdown-num">${String(s).padStart(2,'0')}</div><div class="countdown-label">সেকেন্ড</div></div>`; } catch(e){ console.error("Countdown tick error:", e); clearInterval(countdownInterval)} }; try { tick(); countdownInterval = setInterval(tick, 1000); } catch(e){ console.error("Countdown setup error:", e) } }
         async function setupThemeToggle() { const btn = document.getElementById('theme-toggle-btn'); const meta = document.getElementById('theme-color-meta'); if (!btn || !meta) return; const applyTheme = (theme) => { document.documentElement.setAttribute('data-theme', theme); btn.textContent = theme === 'dark' ? '☀️' : '🌙'; meta.content = theme === 'dark' ? '#1c1c1c' : '#f8f7f2'; }; btn.addEventListener('click', async () => { const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; try { await writeToDB('userData', { id: 'setting_theme', value: newTheme }); } catch (e) { console.error("Failed to save theme:", e); if(e.message === 'QuotaExceededError') showToast('❌ Could not save theme: Storage full!', 'error'); else showToast('❌ Could not save theme!', 'error'); } applyTheme(newTheme); }); const savedTheme = (await getFromDB('userData', 'setting_theme'))?.value || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); applyTheme(savedTheme); }
         async function setupViewToggle() { const btn = document.getElementById('view-toggle-btn'); const viewportMeta = document.querySelector('meta[name="viewport"]'); if (!btn || !viewportMeta) return; const applyView = (mode) => { if (mode === 'desktop') { document.body.classList.add('desktop-view'); viewportMeta.setAttribute('content', 'width=1280, initial-scale=1'); } else { document.body.classList.remove('desktop-view'); viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0'); } }; btn.addEventListener('click', async () => { const newMode = document.body.classList.contains('desktop-view') ? 'mobile' : 'desktop'; try { await writeToDB('userData', { id: 'setting_viewMode', value: newMode }); } catch (e) { console.error("Failed to save view mode:", e); if(e.message === 'QuotaExceededError') showToast('❌ Could not save view: Storage full!', 'error'); else showToast('❌ Could not save view!', 'error'); } applyView(newMode); }); const savedView = (await getFromDB('userData', 'setting_viewMode'))?.value || 'mobile'; applyView(savedView); }
 
@@ -303,8 +670,8 @@
                 const statusMap = { 0: 'Not Started', 1: 'Reading', 2: 'Re-Reading', 3: 'Practicing', 4: 'Done', 5: "Won't Do" };
                 const dataRows = Object.keys(state.userData).filter(key => key.startsWith('s_')).map(key => { const parts = key.replace('s_', '').split('_'); const subjectKey = parts[0]; const chapterId = parseInt(parts[1]); const itemIndex = parseInt(parts[2]); const subject = syllabusData[subjectKey]; const chapter = subject?.chapters.find(c => c.id === chapterId); const item = trackableItems[itemIndex]; if (!subject || !chapter || !item) return null; const statusValue = state.userData[key] ?? 0; const noteKey = `note_${key}`; const timestampKey = `timestamp_${key}`; const safeNote = (state.userData[noteKey] || '').replace(/"/g, '""').replace(/\r?\n/g, ' '); const row = [subject.name, chapter.paper, chapter.name, item, statusMap[statusValue], getRawPercentForStatus(statusValue), safeNote, state.userData[timestampKey] || '']; return `"${row.join('","')}"`; }).filter(Boolean);
                 const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...dataRows].join('\n');
-                const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", `as_study_dashboard_export_${new Date().toISOString().slice(0,10)}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link); showToast('✅ Data exported successfully!', 'success');
-            } catch (e) { console.error("CSV Export Failed:", e); showToast('❌ CSV export failed!', 'error'); }
+                const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", `as_study_dashboard_export_${new Date().toISOString().slice(0,10)}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link); showToast('✅ ডেটা সফলভাবে এক্সপোর্ট হয়েছে!', 'success');
+            } catch (e) { console.error("CSV Export Failed:", e); showToast('❌ CSV এক্সপোর্ট ব্যর্থ হয়েছে!', 'error'); }
         }
 
         function exportDataToJSON() {
@@ -318,11 +685,11 @@
                 link.click();
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
-                showToast('✅ JSON backup exported successfully!', 'success');
-            } catch (e) { console.error("JSON Export Failed:", e); showToast('❌ JSON export failed!', 'error'); }
+                showToast('✅ JSON ব্যাকআপ সফলভাবে এক্সপোর্ট হয়েছে!', 'success');
+            } catch (e) { console.error("JSON Export Failed:", e); showToast('❌ JSON এক্সপোর্ট ব্যর্থ হয়েছে!', 'error'); }
         }
 
-        function renderAll() { try { renderSubjectSelector(); renderProgressCards(); renderSyllabusContent(); renderStudyStreak(); updateSyncQueueCount(); } catch (e) { console.error("RenderAll failed:", e); const container = document.getElementById('app-container'); if (container) container.innerHTML = '<div class="text-red-500 p-4">Error rendering dashboard. Check console.</div>'; }}
+        function renderAll() { try { renderSubjectSelector(); renderProgressCards(); renderSyllabusContent(); renderStudyStreak(); renderGoalsCard(); updateSyncQueueCount(); } catch (e) { console.error("RenderAll failed:", e); const container = document.getElementById('app-container'); if (container) container.innerHTML = '<div class="text-red-500 p-4">Error rendering dashboard. Check console.</div>'; }}
 
         async function startApp() {
             noteModalOverlay = document.getElementById('note-modal-overlay'); noteModalTitle = document.getElementById('note-modal-title'); noteTextarea = document.getElementById('note-textarea'); syncModalOverlay = document.getElementById('sync-modal-overlay');
@@ -331,43 +698,37 @@
             const mainContentGrid = document.getElementById('main-content-grid');
             if (!syncStatusEl || !loadingIndicator || !mainContentGrid) { console.error("Critical elements missing. Aborting."); document.body.innerHTML = "Initialization Error: Required elements not found."; return; }
             syncStatusEl.textContent = 'Initializing...';
-            try { await openDB(); syncStatusEl.textContent = 'Loading cache...'; const cachedData = await getFromDB('userData', 'main'); if (cachedData) { state.userData = cachedData.value || {}; } } catch (e) { console.error("DB/Cache Load failed:", e); syncStatusEl.textContent = 'DB Error'; }
+            try { await openDB(); syncStatusEl.textContent = 'Loading cache...'; const cachedData = await getFromDB('userData', 'main'); if (cachedData) { state.userData = cachedData.value || {}; if(!state.userData.goals) state.userData.goals = {today:[], weekly:[]}; } } catch (e) { console.error("DB/Cache Load failed:", e); syncStatusEl.textContent = 'DB Error'; }
             
             // Render from cache first for instant UI
             try { renderAll(); loadingIndicator.style.display = 'none'; mainContentGrid.style.display = 'grid'; state.isInitialized = true; } catch (e) { console.error("Initial render from cache failed:", e); loadingIndicator.textContent = 'Error during initial render. Check console.'; }
             
             if(db && userDocRef) { 
                 syncStatusEl.textContent = 'Connecting...'; 
-                let isFirstSnapshot = true; // Flag for the "Silent Sync" bug fix
+                let isFirstSnapshot = true; 
                 try { 
                     onSnapshot(userDocRef, async (snap) => { 
                         let requiresUpdate = false; 
                         if (snap.exists()) { 
                             const firestoreData = snap.data(); 
+                            if (!firestoreData.goals) firestoreData.goals = {today:[], weekly:[]};
                             Object.keys(firestoreData).forEach(key => { 
-                                if (state.userData[key] !== firestoreData[key]) { 
+                                if (JSON.stringify(state.userData[key]) !== JSON.stringify(firestoreData[key])) { 
                                     state.userData[key] = firestoreData[key]; 
                                     requiresUpdate = true; 
                                 } 
                             }); 
-                            // Bug Fix: Force a re-render on the first snapshot, even if no data changed
                             if (requiresUpdate || isFirstSnapshot) {
                                 try { await writeToDB('userData', { id: 'main', value: state.userData }); } 
-                                catch (e) { 
-                                    console.error("Failed to write snapshot data to IDB:", e); 
-                                    if (e.message === 'QuotaExceededError') { showToast('❌ Storage full! Cannot save synced data.', 'error'); } 
-                                } 
+                                catch (e) { console.error("Failed to write snapshot data to IDB:", e); if (e.message === 'QuotaExceededError') { showToast('❌ Storage full! Cannot save synced data.', 'error'); } } 
                                 if (state.isInitialized) { 
-                                    // FIX: Changed rerenderAll to renderAll
-                                    renderAll(); // Use renderAll() to ensure everything is drawn correctly
+                                    renderAll();
                                     state.lastCompositeProgress = calculateComposite().composite;
-                                    if(!isFirstSnapshot) {
-                                        showToast('🔄 Data synced from cloud successfully!', 'success'); 
-                                    }
+                                    if(!isFirstSnapshot) { showToast('🔄 ক্লাউড থেকে ডেটা সফলভাবে সিঙ্ক হয়েছে!', 'success'); }
                                 } 
                             }
                         } else { console.warn("User document doesn't exist in Firestore."); } 
-                        isFirstSnapshot = false; // Unset flag after first run
+                        isFirstSnapshot = false; 
                         syncPendingWrites(); 
                     }, (error) => { console.error("Firestore onSnapshot error:", error); syncStatusEl.textContent = 'Sync Failed'; syncStatusEl.className = 'status-indicator offline'; }); 
                 } catch(e) { console.error("onSnapshot setup failed:", e); syncStatusEl.textContent = 'Firebase Error'; syncStatusEl.className = 'status-indicator offline';} 
@@ -387,3 +748,4 @@
     </script>
 </body>
 </html>
+
