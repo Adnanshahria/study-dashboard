@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google" content="notranslate" />
     <meta name="theme-color" id="theme-color-meta" content="#1c1c1c" />
-    <title>AS Study Dashboard v14.1 (Data Migration Fix)</title> 
+    <title>AS Study Dashboard v14.2 (Bug Fix)</title> 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -149,10 +149,8 @@
                     <div id="streak-container" class="mb-4"></div>
                     <div id="global-summary-container" class="flex flex-col gap-3">Loading Summaries...</div>
                 </div>
-                <!-- New Goal Tracker Card -->
                 <div id="goal-tracker-card" class="card">
-                    <!-- Content will be rendered by JS -->
-                </div>
+                    </div>
             </div>
         </div>
         <div id="loading-indicator" class="text-center py-10">Initializing Dashboard...</div>
@@ -220,7 +218,10 @@
             if(globalSummary) { globalSummary.innerHTML = createSingleProgressBarHTML(composite.mainAvg, "মূল পাঠ", "mint") + createSingleProgressBarHTML(composite.revAvg, "রিভিশন", "sky") + createSingleProgressBarHTML(composite.examAvg, "পরীক্ষা", "peach") + createSingleProgressBarHTML(composite.qbAvg, "প্রশ্নব্যাংক", "amber"); }
         }
         function renderSyllabusContent() { const container = document.getElementById('syllabus-content'); if(!container) return; const fragment = document.createDocumentFragment(); const subjectKey = state.activeSubject; const chaptersByPaper = syllabusData[subjectKey]?.chapters?.reduce((acc, chap) => { (acc[chap.paper] = acc[chap.paper] || []).push(chap); return acc; }, {}); if(!chaptersByPaper) { container.innerHTML = 'No chapters found.'; return; } const noteIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /></svg>`; const tickIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>`; Object.entries(chaptersByPaper).forEach(([paper, chapters]) => { const details = document.createElement('details'); details.dataset.paper = paper; details.open = state.syllabusOpenState[`${subjectKey}-${paper}`] !== false; const paperProgress = calculateProgress(subjectKey, mainStudyItems); const currentPaperProgress = (paper == 1) ? paperProgress.paper1 : paperProgress.paper2; details.innerHTML = `<summary class="flex justify-between items-center p-3 border border-secondary rounded-lg mb-2 cursor-pointer transition-all hover:bg-main"><div class="font-bold flex items-center">${paper}ম পত্র <span class="text-sm font-normal text-muted ml-2" data-paper-percent>(${currentPaperProgress.toFixed(1)}%)</span> <span class="ml-2" data-info-btn-id="paper-${paper}-info-btn"></span></div><div class="w-1/3" data-paper-progress-bar="${paper}">${createProgressBar(currentPaperProgress, paper == 1 ? 'sky' : 'peach')}</div></summary>`; const tableWrapper = document.createElement('div'); tableWrapper.className = 'overflow-x-auto'; const table = document.createElement('table'); table.innerHTML = `<thead><tr><th class="w-1/4">অধ্যায়</th>${trackableItems.map(h => `<th class="text-center">${h}</th>`).join('')}</tr></thead>`; const tbody = document.createElement('tbody'); chapters.forEach(chapter => { const tr = document.createElement('tr'); let cells = `<td class="font-medium">${chapter.name}</td>`; trackableItems.forEach((item, i) => { const key = `s_${subjectKey}_${chapter.id}_${i}`; const status = Number(state.userData?.[key] ?? 0); const noteKey = `note_${key}`; const hasNote = !!state.userData?.[noteKey]; 
-        const fillValue = (status <= 4) ? status * 20 : 100; // 80% then 100%
+        
+        // --- BUG FIX 2 ---
+        const fillValue = (status <= 4) ? status * 20 : (status === 5 ? 100 : 0); // Fix: 0% for status 6
+        
         const isDone = status === 5; 
         const isWont = status === 6; 
         const statusText = isWont ? '✖' : (isDone ? tickIconSVG : `${status * 20}%`); 
@@ -431,7 +432,10 @@
                 for (const item of writesToQueue) { await writeToDB('pendingWrites', item); } 
                 await writeToDB('userData', { id: 'main', value: state.userData }); 
                 document.getElementById('connection-status').textContent = 'Saved locally'; 
+                
+                // --- BUG FIX 1 (call rerenderProgressBarsOnly) ---
                 rerenderProgressBarsOnly(); 
+                
                 await updateSyncQueueCount(); 
                 syncPendingWrites(); 
             } catch (e) { 
@@ -440,8 +444,26 @@
                 else { showToast('❌ Local save failed!', 'error'); } 
             }
         }
-
-        function rerenderProgressBarsOnly() { try { renderSubjectSelector(); renderProgressCards(); renderStudyStreak(); renderGoalsCard(); const subjectKey = state.activeSubject; const paperProgress = calculateProgress(subjectKey, mainStudyItems); updatePaperSummaryProgress(1, paperProgress.paper1); updatePaperSummaryProgress(2, paperProgress.paper2); updateSyncQueueCount(); } catch (e) { console.error("Error updating visuals:", e); renderAll(); } }
+        
+        // --- BUG FIX 1 (Modified rerenderProgressBarsOnly) ---
+        function rerenderProgressBarsOnly() { 
+            try { 
+                renderSubjectSelector(); 
+                renderProgressCards(); 
+                renderStudyStreak(); 
+                // renderGoalsCard(); // REMOVED - This was the performance bug
+                
+                const subjectKey = state.activeSubject; 
+                const paperProgress = calculateProgress(subjectKey, mainStudyItems); 
+                updatePaperSummaryProgress(1, paperProgress.paper1); 
+                updatePaperSummaryProgress(2, paperProgress.paper2); 
+                updateSyncQueueCount(); 
+            } catch (e) { 
+                console.error("Error updating visuals:", e); 
+                renderAll(); // Fallback if anything else fails
+            } 
+        }
+        
         function updatePaperSummaryProgress(paperNum, progressValue) { const summaryEl = document.querySelector(`details[data-paper="${paperNum}"] > summary`); if (summaryEl) { const progressDiv = summaryEl.querySelector(`[data-paper-progress-bar="${paperNum}"]`); const percentSpan = summaryEl.querySelector('[data-paper-percent]'); const color = paperNum === 1 ? 'sky' : 'peach'; if (progressDiv) progressDiv.innerHTML = createProgressBar(progressValue, color); if (percentSpan) percentSpan.textContent = `(${progressValue.toFixed(1)}%)`; } }
         async function syncPendingWrites() {
             const syncStatusEl = document.getElementById('connection-status'); if (!db || !userDocRef) { syncStatusEl.textContent = 'Firebase Error'; syncStatusEl.className = 'status-indicator offline'; return; }
@@ -544,8 +566,11 @@
                     if (targetBtn.classList.contains('task-status-btn')) { 
                         const key = targetBtn.dataset.key; 
                         const currentStatus = Number(state.userData?.[key] ?? 0); 
-                        const newStatus = (currentStatus + 1) % 7; // Logic Fix: 7 states (0-6)
-                        const fillValue = (newStatus <= 4) ? newStatus * 20 : 100;
+                        const newStatus = (currentStatus + 1) % 7;
+                        
+                        // --- BUG FIX 3 ---
+                        const fillValue = (newStatus <= 4) ? newStatus * 20 : (newStatus === 5 ? 100 : 0);
+                        
                         const isDone = newStatus === 5; 
                         const isWont = newStatus === 6; 
                         const statusText = isWont ? '✖' : (isDone ? tickIconSVG : `${newStatus * 20}%`); 
