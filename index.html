@@ -69,7 +69,7 @@
 
         body.desktop-view { min-width: 1280px; }
         body:not(.desktop-view) .main-grid { grid-template-columns: 1fr; }
-        body:not(.desktop-view) .right-column { grid-row-start: 1; }
+        body:not(.desktop-view) .right-column { grid-row-start: 1; display: grid; grid-template-columns: 1fr; gap: 1rem; }
         body:not(.desktop-view) .card { padding: 14px; width: 100%; box-sizing: border-box; }
         body.desktop-view .card { padding: 20px; }
         body:not(.desktop-view) h1 { font-size: 1.125rem; }
@@ -138,22 +138,20 @@
                 <section id="syllabus-shell" class="card"><h2 class="text-base font-bold mb-3">সিলেবাস বিস্তারিত</h2><div id="syllabus-content">Loading...</div></section>
             </div>
 
-            <div class="right-column col-span-1 grid grid-rows-[min-content,auto] gap-5">
+            <div class="right-column col-span-1 grid auto-rows-min gap-5">
                 <div id="countdown-card" class="card text-white p-5">
                     <h2 class="text-lg font-bold mb-4 text-center flex justify-between items-center"><span>Final Countdown</span><span id="countdown-info-btn"></span></h2>
                     <div id="countdown" class="flex justify-around">Loading...</div>
                 </div>
-                <div class="flex flex-col gap-5">
-                    <div class="card">
-                        <h2 class="text-base font-bold mb-3 flex justify-between items-center">সার্বিক সারাংশ ও অগ্রগতি <span id="global-summary-info-btn"></span></h2>
-                        <div id="overall-progress-container" class="mb-4">Loading Progress...</div>
-                        <div id="streak-container" class="mb-4"></div>
-                        <div id="global-summary-container" class="flex flex-col gap-3">Loading Summaries...</div>
-                    </div>
-                    <!-- New Goal Tracker Card -->
-                    <div id="goal-tracker-card" class="card">
-                        <!-- Content will be rendered by JS -->
-                    </div>
+                <div class="card">
+                    <h2 class="text-base font-bold mb-3 flex justify-between items-center">সার্বিক সারাংশ ও অগ্রগতি <span id="global-summary-info-btn"></span></h2>
+                    <div id="overall-progress-container" class="mb-4">Loading Progress...</div>
+                    <div id="streak-container" class="mb-4"></div>
+                    <div id="global-summary-container" class="flex flex-col gap-3">Loading Summaries...</div>
+                </div>
+                <!-- New Goal Tracker Card -->
+                <div id="goal-tracker-card" class="card">
+                    <!-- Content will be rendered by JS -->
                 </div>
             </div>
         </div>
@@ -278,14 +276,17 @@
             const customGoals = allGoals.filter(g => {
                 if(!g.dueDate) return true;
                 const goalDate = new Date(g.dueDate);
-                return goalDate < weekRange.start || goalDate > weekRange.end;
+                const today = new Date(todayISO);
+                today.setHours(0,0,0,0);
+                return goalDate < today && !g.completed;
             });
             
             const todayProgress = todayGoals.length > 0 ? (todayGoals.filter(g => g.completed).length / todayGoals.length) * 100 : 0;
             const weeklyProgress = weeklyGoalsForCurrentView.length > 0 ? (weeklyGoalsForCurrentView.filter(g => g.completed).length / weeklyGoalsForCurrentView.length) * 100 : 0;
             const customProgress = customGoals.length > 0 ? (customGoals.filter(g => g.completed).length / customGoals.length) * 100 : 0;
             
-            const consolidatedProgress = allGoals.length > 0 ? (allGoals.filter(g=>g.completed).length / allGoals.length) * 100 : 0;
+            const allVisibleGoals = [...todayGoals, ...weeklyGoalsForCurrentView, ...customGoals];
+            const consolidatedProgress = allVisibleGoals.length > 0 ? (allVisibleGoals.filter(g=>g.completed).length / allVisibleGoals.length) * 100 : 0;
             
             const tickSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4" style="color: var(--bg-card);"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg>`;
             const calendarSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c0-.414.336-.75.75-.75h10.5a.75.75 0 01.75.75v1.25c0 .414-.336.75-.75.75H5.5a.75.75 0 01-.75-.75V7.5z" clip-rule="evenodd" /></svg>`;
@@ -879,5 +880,3 @@
     </script>
 </body>
 </html>
-
-
