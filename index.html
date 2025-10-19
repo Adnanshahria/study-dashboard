@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google" content="notranslate" />
     <meta name="theme-color" id="theme-color-meta" content="#1c1c1c" />
-    <title>AS Study Dashboard v13.4 (Enhanced Date Selection)</title> 
+    <title>AS Study Dashboard v14.0 (Advanced Goal Management)</title> 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -89,12 +89,15 @@
         /* Goal Tracker Styles */
         .goal-tab { padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; color: var(--text-muted); font-weight: 500;}
         .goal-tab.active { color: var(--text-primary); border-bottom-color: var(--text-primary); font-weight: 700; }
-        .goal-list-item { display: flex; align-items: center; gap: 12px; padding: 8px 4px; border-bottom: 1px solid var(--border-secondary); }
+        .goal-list-item { display: flex; align-items: center; gap: 12px; padding: 8px 4px; border-bottom: 1px solid var(--border-secondary); cursor: grab; }
+        .goal-list-item.dragging { opacity: 0.5; background: var(--border-secondary); }
         .goal-list-item:last-child { border-bottom: none; }
         .goal-tick-btn { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--border-primary); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
         .goal-list-item.completed .goal-tick-btn { background-color: var(--text-primary); border-color: var(--text-primary); }
         .goal-list-item.completed .goal-title { text-decoration: line-through; color: var(--text-muted); }
-        .goal-title { flex-grow: 1; font-weight: 500; }
+        .goal-title, .goal-time { flex-grow: 1; font-weight: 500; }
+        .goal-time { flex-grow: 0; flex-shrink: 0; color: var(--text-muted); font-size: 11px; font-weight: 600; }
+        .goal-editable { cursor: pointer; }
         .goal-action-btn { color: var(--text-muted); opacity: 0.5; transition: all 0.2s; }
         .goal-action-btn:hover { opacity: 1; color: var(--text-primary); }
         .goal-delete-btn:hover { color: #ef4444; }
@@ -246,6 +249,16 @@
             };
         }
 
+        function formatMinutes(minutes) {
+            if (!minutes || minutes <= 0) return '';
+            const h = Math.floor(minutes / 60);
+            const m = minutes % 60;
+            let result = '';
+            if (h > 0) result += `${h} ঘন্টা `;
+            if (m > 0) result += `${m} মিনিট`;
+            return result.trim();
+        }
+
         function renderGoalsCard() {
             const container = document.getElementById('goal-tracker-card');
             if (!container) return;
@@ -337,9 +350,10 @@
                     <ul id="goal-list" class="space-y-2 mb-4">
                         ${goalsToShow.length === 0 ? `<p class="text-center text-muted text-sm py-4">কোনো লক্ষ্য যোগ করা হয়নি।</p>` : ''}
                         ${goalsToShow.map(goal => `
-                            <li class="goal-list-item ${goal.completed ? 'completed' : ''}" data-goal-id="${goal.id}">
+                            <li class="goal-list-item ${goal.completed ? 'completed' : ''}" data-goal-id="${goal.id}" draggable="true">
                                 <button class="goal-tick-btn">${goal.completed ? tickSVG : ''}</button>
-                                <span class="goal-title">${goal.title}</span>
+                                <span class="goal-title goal-editable">${goal.title}</span>
+                                <span class="goal-time goal-editable">${formatMinutes(goal.estimateTimeMin)}</span>
                                 <div class="relative">
                                      <button class="goal-action-btn goal-date-btn">${calendarSVG}</button>
                                      <input type="date" class="goal-date-editor hidden absolute right-0 top-0" value="${goal.dueDate || ''}">
@@ -350,7 +364,8 @@
                             </li>`).join('')}
                     </ul>
                     <form id="goal-add-form" class="flex items-center gap-2">
-                        <input type="text" class="goal-add-input flex-grow" placeholder="নতুন লক্ষ্য লিখুন...">
+                        <input type="text" id="goal-title-input" class="goal-add-input flex-grow" placeholder="নতুন লক্ষ্য লিখুন...">
+                        <input type="number" id="goal-time-input" class="goal-add-input w-24" placeholder="মিনিট">
                         <input type="date" id="goal-due-date" class="goal-add-input w-auto">
                         <button type="submit" class="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm">যোগ</button>
                     </form>
@@ -373,7 +388,6 @@
 
         // --- State Update & Sync Logic ---
         let updateTimeout; let noteModalOverlay, noteModalTitle, noteTextarea, syncModalOverlay;
-        const debouncedUpdate = (key, value) => { clearTimeout(updateTimeout); updateTimeout = setTimeout(() => { updateState(key, value); checkMilestones(); }, 150); };
         async function updateState(key, value, debounce = false) {
             // Simplified for goals
             if (key === 'userData.goals') {
@@ -484,6 +498,7 @@
         async function renderSyncQueuePanel() { const listEl = document.getElementById('sync-queue-list'); const countEl = document.getElementById('sync-modal-count'); if (!listEl || !countEl) return; const pending = await getAllFromDB('pendingWrites'); countEl.textContent = pending.length; if (pending.length === 0) { listEl.innerHTML = '<li>No pending changes.</li>'; return; } listEl.innerHTML = ''; pending.forEach(item => { const li = document.createElement('li'); li.textContent = translateSyncKey(item.key); listEl.appendChild(li); }); }
         async function updateSyncQueueCount(count = null) { const badge = document.getElementById('sync-queue-count'); if (!badge) return; try { const currentCount = count ?? (await getAllFromDB('pendingWrites')).length; badge.textContent = currentCount; badge.style.display = currentCount > 0 ? 'flex' : 'none'; } catch(e){ console.error("Failed to update sync count", e); }}
 
+        let draggedGoalId = null;
         function setupEventHandlers() {
             const infoModalOverlay = document.getElementById('info-modal-overlay');
             const tickIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>`;
@@ -491,6 +506,12 @@
             document.body.addEventListener('click', e => {
                 const target = e.target;
                 const targetBtn = target.closest('button');
+
+                // Close any open inline editors if clicking outside
+                const activeEditor = document.querySelector('.goal-inline-editor');
+                if (activeEditor && !activeEditor.contains(target)) {
+                    activeEditor.blur();
+                }
 
                 if (targetBtn) {
                     // --- Main Dashboard Actions ---
@@ -531,6 +552,10 @@
                 // --- Goal Tracker Actions (Event Delegation) ---
                 const goalCard = target.closest('#goal-tracker-card');
                 if (goalCard) {
+                    if (target.classList.contains('goal-editable')) {
+                        makeGoalEditable(target);
+                    }
+
                     const tabBtn = target.closest('.goal-tab');
                     if (tabBtn) { state.activeGoalTab = tabBtn.dataset.tab; if(tabBtn.dataset.tab !== 'weekly') state.currentWeeklyViewDate = new Date().toISOString(); renderGoalsCard(); return; }
 
@@ -543,9 +568,13 @@
                     if(target.id === 'view-specific-date-btn') { const datePicker = document.getElementById('history-date-picker'); if (datePicker && datePicker.value) { state.historyViewState.mode = 'specificDate'; state.historyViewState.selectedDate = datePicker.value; renderGoalsCard(); } }
                     if(target.id === 'view-last-7-days-btn') { state.historyViewState.mode = 'last7days'; state.historyViewState.selectedDate = null; renderGoalsCard(); }
 
-                    if(target.closest('#week-selector-label')) {
-                        const dateInput = document.getElementById('week-selector-input');
-                        if(dateInput) dateInput.click();
+                    const dateBtn = target.closest('.goal-date-btn');
+                    if(dateBtn) {
+                        const dateEditor = dateBtn.nextElementSibling;
+                        if(dateEditor) {
+                            dateEditor.classList.toggle('hidden');
+                            if(!dateEditor.classList.contains('hidden')) dateEditor.focus();
+                        }
                     }
                 }
             });
@@ -566,15 +595,48 @@
             document.body.addEventListener('submit', e => {
                  if (e.target.id === 'goal-add-form') {
                     e.preventDefault();
-                    const input = e.target.querySelector('input[type="text"]');
-                    const dateInput = e.target.querySelector('input[type="date"]');
-                    if (input && input.value.trim()) {
-                        addGoal(input.value.trim(), dateInput.value);
-                        input.value = '';
+                    const titleInput = e.target.querySelector('#goal-title-input');
+                    const timeInput = e.target.querySelector('#goal-time-input');
+                    const dateInput = e.target.querySelector('#goal-due-date');
+                    if (titleInput && titleInput.value.trim()) {
+                        addGoal(titleInput.value.trim(), dateInput.value, timeInput.value);
+                        titleInput.value = '';
                         dateInput.value = '';
+                        timeInput.value = '';
                     }
                 }
             });
+
+            // Drag and Drop
+            document.body.addEventListener('dragstart', e => {
+                if (e.target.classList.contains('goal-list-item')) {
+                    draggedGoalId = e.target.dataset.goalId;
+                    e.target.classList.add('dragging');
+                }
+            });
+             document.body.addEventListener('dragend', e => {
+                if (e.target.classList.contains('goal-list-item')) {
+                    e.target.classList.remove('dragging');
+                    draggedGoalId = null;
+                }
+            });
+            document.body.addEventListener('dragover', e => {
+                const goalList = e.target.closest('#goal-list');
+                if(goalList && draggedGoalId){
+                    e.preventDefault();
+                }
+            });
+            document.body.addEventListener('drop', e => {
+                const goalList = e.target.closest('#goal-list');
+                 if(goalList && draggedGoalId){
+                    e.preventDefault();
+                    const targetLi = e.target.closest('.goal-list-item');
+                    if(targetLi && targetLi.dataset.goalId !== draggedGoalId) {
+                        reorderGoals(draggedGoalId, targetLi.dataset.goalId);
+                    }
+                }
+            });
+
 
             const closeInfoModal = () => infoModalOverlay.classList.remove('visible');
             infoModalOverlay.addEventListener('click', e => { if (e.target === infoModalOverlay) closeInfoModal(); });
@@ -584,8 +646,59 @@
             if (syllabusContent) { syllabusContent.addEventListener('toggle', (e) => { if (e.target.tagName === 'DETAILS') { const paper = e.target.dataset.paper; if(paper) state.syllabusOpenState[`${state.activeSubject}-${paper}`] = e.target.open; } }, true); }
         }
         
-        function addGoal(title, dueDate) {
-            const newGoal = { id: `g_${Date.now()}`, title, completed: false, createdAt: new Date().toISOString(), dueDate: dueDate || null };
+        function makeGoalEditable(element) {
+            const goalId = element.closest('.goal-list-item').dataset.goalId;
+            const isTimeEl = element.classList.contains('goal-time');
+            const goals = state.userData.goals || { today: [], weekly: [] };
+            const goal = goals.today.find(g => g.id === goalId) || goals.weekly.find(g => g.id === goalId);
+            if(!goal) return;
+
+            const input = document.createElement('input');
+            input.type = isTimeEl ? 'number' : 'text';
+            input.value = isTimeEl ? goal.estimateTimeMin || '' : goal.title;
+            input.className = 'goal-add-input goal-inline-editor';
+            
+            element.replaceWith(input);
+            input.focus();
+            input.select();
+
+            const saveChanges = () => {
+                const newValue = input.value;
+                if(isTimeEl) {
+                    goal.estimateTimeMin = parseInt(newValue, 10) || null;
+                } else {
+                    goal.title = newValue.trim() || goal.title;
+                }
+                updateState('userData.goals', goals);
+            };
+
+            input.addEventListener('blur', saveChanges);
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter') input.blur();
+                if (e.key === 'Escape') {
+                    input.value = isTimeEl ? goal.estimateTimeMin || '' : goal.title;
+                    input.blur();
+                }
+            });
+        }
+        
+        function reorderGoals(draggedId, targetId) {
+            const goals = state.userData.goals || { today: [], weekly: [] };
+            const list = goals[state.activeGoalTab];
+            if(!list) return;
+
+            const draggedIndex = list.findIndex(g => g.id === draggedId);
+            const targetIndex = list.findIndex(g => g.id === targetId);
+            if(draggedIndex === -1 || targetIndex === -1) return;
+
+            const [draggedItem] = list.splice(draggedIndex, 1);
+            list.splice(targetIndex, 0, draggedItem);
+            
+            updateState('userData.goals', goals);
+        }
+
+        function addGoal(title, dueDate, estimateTime) {
+            const newGoal = { id: `g_${Date.now()}`, title, completed: false, createdAt: new Date().toISOString(), dueDate: dueDate || null, estimateTimeMin: parseInt(estimateTime, 10) || null };
             const currentGoals = state.userData.goals || { today: [], weekly: [] };
             const todayISO = new Date().toISOString().slice(0, 10);
 
@@ -639,23 +752,16 @@
             let goalWeekly = currentGoals.weekly.find(g => g.id === goalId);
             const todayISO = new Date().toISOString().slice(0, 10);
             
-            // Update date in weekly list first
-            if (goalWeekly) {
-                goalWeekly.dueDate = newDueDate;
-            }
-
-            // Sync with today list
+            if (goalWeekly) { goalWeekly.dueDate = newDueDate; }
             const isInTodayList = !!goalToday;
             const shouldBeInTodayList = newDueDate === todayISO;
 
             if (shouldBeInTodayList && !isInTodayList) {
-                // To avoid duplicates, we need to make sure we're adding the reference from weekly
                 const goalRef = currentGoals.weekly.find(g => g.id === goalId);
                 if(goalRef) currentGoals.today.push(goalRef);
             } else if (!shouldBeInTodayList && isInTodayList) {
                 currentGoals.today = currentGoals.today.filter(g => g.id !== goalId);
             }
-
             updateState('userData.goals', currentGoals);
         }
 
@@ -748,4 +854,5 @@
     </script>
 </body>
 </html>
+
 
